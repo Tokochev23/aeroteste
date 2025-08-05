@@ -393,7 +393,7 @@ export function updateCalculations() {
         totalEmptyWeight += (data.weight || 0) * numEngines;
         reliabilityModifier *= Math.pow(data.reliability_mod || 1.0, numEngines);
         aero.drag_mod *= data.drag_mod || 1.0;
-        aero.power_mod *= data.performance_mod || data.power_modifier || 1.0;
+        aero.power_mod *= data.performance_mod || data.characteristics?.power_modifier || 1.0; // Corrigido para acessar characteristics.power_modifier
         reliabilityModifier *= (data.characteristics?.reliability_bonus || 1.0);
         reliabilityModifier *= (data.characteristics?.reliability_modifier || 1.0);
     });
@@ -523,8 +523,11 @@ export function updateCalculations() {
     const finalUnitCost = baseUnitCost * (1 - countryCostReduction);
 
     // --- CÁLCULOS DE PERFORMANCE ---
+    // Usar a altitude ótima do supercharger para o cálculo de performance em altitude
+    const optimalAltitudeForPerformance = superchargerData.characteristics.optimal_altitude || superchargerData.characteristics.altitude_limit || 0;
+
     const perfSL = calculatePerformanceAtAltitude(0, combatWeight, totalEnginePower, propData, aero, superchargerData);
-    const perfAlt = calculatePerformanceAtAltitude(superchargerData.characteristics.optimal_altitude || superchargerData.characteristics.altitude_limit, combatWeight, totalEnginePower, propData, aero, superchargerData);
+    const perfAlt = calculatePerformanceAtAltitude(optimalAltitudeForPerformance, combatWeight, totalEnginePower, propData, aero, superchargerData);
 
     // Valores calculados brutos
     let rawSpeedKmhSL = perfSL.speed_kmh * aero.speed_mod;
@@ -557,13 +560,15 @@ export function updateCalculations() {
 
     // Teto de Serviço
     let serviceCeiling = 0;
-    for (let h = 0; h <= 15000; h += 250) {
+    // Usar a altitude limite do supercharger como limite superior para o cálculo do teto
+    const maxCeilingCalcAltitude = superchargerData.characteristics.altitude_limit || 15000;
+    for (let h = 0; h <= maxCeilingCalcAltitude; h += 250) {
         const currentROC = calculateRateOfClimb(h, combatWeight, totalEnginePower, propData, aero, superchargerData);
         if (currentROC < gameData.constants.min_roc_for_ceiling) {
             serviceCeiling = h;
             break;
         }
-        if (h === 15000) serviceCeiling = h; // Se atingir o limite, define o teto como o limite
+        if (h >= maxCeilingCalcAltitude) serviceCeiling = maxCeilingCalcAltitude; // Se atingir o limite, define o teto como o limite
     }
     let finalServiceCeiling = serviceCeiling * aero.ceiling_mod;
     // Limita o teto de serviço com base nos sistemas de cabine
