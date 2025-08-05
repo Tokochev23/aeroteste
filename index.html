@@ -140,6 +140,30 @@
                                 </select>
                                 <p id="wing_type_note" class="text-sm text-gray-600 mt-1"></p>
                             </div>
+                            <!-- NOVO: Posição da Asa -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Posição da Asa</label>
+                                <select id="wing_position"
+                                        class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                                    <!-- Opções populadas via JS -->
+                                </select>
+                                <div id="wing_position_info" class="flex items-center mt-2 p-2 bg-gray-50 rounded-lg hidden">
+                                    <img id="wing_position_img" src="" alt="Ilustração da Posição da Asa" class="w-12 h-12 mr-3 object-contain">
+                                    <p id="wing_position_description" class="text-xs text-gray-700"></p>
+                                </div>
+                            </div>
+                            <!-- NOVO: Formato da Asa -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Formato da Asa</label>
+                                <select id="wing_shape"
+                                        class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                                    <!-- Opções populadas via JS -->
+                                </select>
+                                <div id="wing_shape_info" class="flex items-center mt-2 p-2 bg-gray-50 rounded-lg hidden">
+                                    <img id="wing_shape_img" src="" alt="Ilustração do Formato da Asa" class="w-12 h-12 mr-3 object-contain">
+                                    <p id="wing_shape_description" class="text-xs text-gray-700"></p>
+                                </div>
+                            </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Trem de Pouso</label>
                                 <select id="landing_gear_type"
@@ -184,7 +208,7 @@
                     </div>
                 </div>
 
-                <!-- Step 3: Motor e Propulsão -->
+                <!-- Step 3: Motor e Propulsão (NOVO SISTEMA DE DESIGN) -->
                 <div class="step-card bg-white rounded-2xl shadow-xl overflow-hidden" id="step_3">
                     <div class="bg-gradient-to-r from-orange-600 to-red-600 text-white p-4 cursor-pointer step-header" data-step="3">
                         <div class="flex items-center justify-between">
@@ -196,88 +220,104 @@
                         </div>
                     </div>
                     <div class="p-6 space-y-4 hidden" id="step_3_content">
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Tipo de Motor</label>
-                                <select id="engine_type"
-                                        class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent">
-                                    <option value="">Selecione um motor...</option>
-                                    <option value="radial_7">Motor Radial 7 cilindros</option>
-                                    <option value="radial_11">Motor Radial 11 cilindros</option>
-                                    <option value="radial_16">Motor Radial 16 cilindros</option>
-                                    <option value="radial_18">Motor Radial 18 cilindros</option>
-                                    <option value="rotary_9">Motor Rotativo 9 cilindros</option>
-                                    <option value="v8">Motor V8</option>
-                                    <option value="v12">Motor V12</option>
-                                    <option value="v16">Motor V16</option>
-                                    <option value="v24">Motor V24</option>
-                                </select>
-                                <p id="engine_type_note" class="text-sm text-gray-600 mt-1"></p>
+                        <!-- PASSO 1: Escolher Tipo de Motor -->
+                        <div class="bg-gray-50 p-4 rounded-lg mb-4">
+                            <h4 class="text-md font-semibold text-gray-800 mb-3">1️⃣ Escolha o Tipo de Motor</h4>
+                            <div id="engine-type-selection" class="grid grid-cols-2 lg:grid-cols-3 gap-3">
+                                <!-- Botões de motor serão populados aqui via JS -->
                             </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Número de Motores</label>
-                                <input type="number" id="num_engines" min="1" max="8" value="1"
-                                        class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent">
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Potência por Motor (HP)</label>
-                                <input type="number" id="engine_power" min="50" max="3000" value="500"
-                                        class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent">
-                                <p id="engine_power_note" class="text-sm text-red-600 mt-1"></p>
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Tipo de Hélice</label>
-                                <select id="propeller_type"
-                                        class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent">
-                                    <option value="wood_2">Madeira 2 pás</option>
-                                    <option value="wood_3">Madeira 3 pás</option>
-                                    <option value="metal_2">Metal 2 pás</option>
-                                    <option value="metal_3">Metal 3 pás</option>
-                                    <option value="adjustable">Passo Variável/Vel. Constante</option>
-                                </select>
-                                <p id="propeller_type_note" class="text-sm text-gray-600 mt-1"></p>
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Sistema de Refrigeração</label>
-                                <select id="cooling_system"
-                                        class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent">
-                                    <option value="air">Refrigeração a Ar</option>
-                                    <option value="liquid">Refrigeração Líquida</option>
-                                </select>
-                                <p id="cooling_system_note" class="text-sm text-gray-600 mt-1"></p>
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Alimentação de Combustível</label>
-                                <select id="fuel_feed"
-                                        class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent">
-                                    <option value="carburetor">Carburador</option>
-                                    <option value="injection">Injeção de Combustível</option>
-                                </select>
-                                <p id="fuel_feed_note" class="text-sm text-gray-600 mt-1"></p>
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Sobrealimentação</label>
-                                <select id="supercharger"
-                                        class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent">
-                                    <option value="none">Nenhum</option>
-                                    <option value="single_stage">Mecânico - 1 Estágio</option>
-                                    <option value="two_stage">Mecânico - 2 Estágios</option>
-                                    <option value="turbo">Turboalimentador</option>
-                                </select>
-                                <p id="supercharger_note" class="text-sm text-gray-600 mt-1"></p>
+                            <div id="engine-selected-info" class="mt-4 p-3 bg-blue-50 rounded-lg hidden">
+                                <h5 class="font-bold text-blue-800" id="selected_engine_name"></h5>
+                                <p class="text-sm text-blue-700" id="selected_engine_description"></p>
+                                <div class="flex flex-wrap gap-2 mt-2" id="selected_engine_characteristics"></div>
                             </div>
                         </div>
 
-                        <div id="engine_enhancements_checkboxes">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Melhorias do Motor</label>
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                <div class="checkbox-row">
-                                    <input type="checkbox" id="ducted_radiators" class="w-4 h-4 text-orange-600">
-                                    <label for="ducted_radiators" class="text-sm">Radiadores Dutados</label>
+                        <!-- PASSO 2: Escolher Sobrealimentador -->
+                        <div class="bg-gray-50 p-4 rounded-lg mb-4 opacity-50 pointer-events-none" id="supercharger-step">
+                            <h4 class="text-md font-semibold text-gray-800 mb-3">2️⃣ Escolha o Sistema de Sobrealimentação</h4>
+                            <div id="supercharger-selection" class="grid grid-cols-2 lg:grid-cols-3 gap-3">
+                                <!-- Opções de sobrealimentador serão populadas aqui via JS -->
+                            </div>
+                            <div id="supercharger-selected-info" class="mt-4 p-3 bg-blue-50 rounded-lg hidden">
+                                <h5 class="font-bold text-blue-800" id="selected_supercharger_name"></h5>
+                                <p class="text-sm text-blue-700" id="selected_supercharger_description"></p>
+                                <div class="flex flex-wrap gap-2 mt-2" id="selected_supercharger_characteristics"></div>
+                            </div>
+                            <div id="combo-warning" class="mt-3 p-2 bg-yellow-100 rounded-lg text-yellow-800 hidden">
+                                <!-- Avisos de combinação -->
+                            </div>
+                        </div>
+
+                        <!-- PASSO 3: Ajustar Performance (Sliders) -->
+                        <div class="bg-gray-50 p-4 rounded-lg mb-4 opacity-50 pointer-events-none" id="performance-sliders-step">
+                            <h4 class="text-md font-semibold text-gray-800 mb-3">3️⃣ Ajuste a Performance Desejada</h4>
+                            
+                            <!-- Slider de Velocidade -->
+                            <div class="design-slider-group mb-4">
+                                <label class="flex justify-between mb-2 text-sm font-medium text-gray-700">
+                                    <span>⚡ Velocidade Máxima</span>
+                                    <span id="speed-value">--- km/h</span>
+                                </label>
+                                <input type="range" id="target-speed" min="0" max="0" value="0"
+                                       class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer" disabled>
+                                <div class="flex justify-between text-xs text-gray-500">
+                                    <span id="speed-min">Min: ---</span>
+                                    <span id="speed-max">Max: ---</span>
                                 </div>
-                                <div class="checkbox-row">
-                                    <input type="checkbox" id="intercoolers" class="w-4 h-4 text-orange-600">
-                                    <label for="intercoolers" class="text-sm">Intercoolers</label>
+                                <div id="speed-consequences" class="text-xs mt-2 text-orange-600"></div>
+                            </div>
+                            
+                            <!-- Slider de Alcance -->
+                            <div class="design-slider-group mb-4">
+                                <label class="flex justify-between mb-2 text-sm font-medium text-gray-700">
+                                    <span>📍 Alcance</span>
+                                    <span id="range-value">--- km</span>
+                                </label>
+                                <input type="range" id="target-range" min="0" max="0" value="0"
+                                       class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer" disabled>
+                                <div class="flex justify-between text-xs text-gray-500">
+                                    <span id="range-min">Min: ---</span>
+                                    <span id="range-max">Max: ---</span>
+                                </div>
+                                <div id="range-consequences" class="text-xs mt-2 text-orange-600"></div>
+                            </div>
+
+                            <!-- Teto Operacional (readonly) -->
+                            <div class="altitude-display p-3 bg-gray-100 rounded-lg">
+                                <div class="flex justify-between text-sm font-medium text-gray-700">
+                                    <span>🏔️ Teto Operacional:</span>
+                                    <span id="max-altitude" class="font-bold">--- metros</span>
+                                </div>
+                            </div>
+
+                            <!-- Propeller Type (automatic based on speed) -->
+                            <div class="propeller-display p-3 bg-gray-100 rounded-lg mt-4">
+                                <div class="flex justify-between text-sm font-medium text-gray-700">
+                                    <span>⚙️ Hélice Sugerida:</span>
+                                    <span id="suggested_propeller" class="font-bold">---</span>
+                                </div>
+                            </div>
+                            <!-- Cooling System (automatic based on engine type) -->
+                            <div class="cooling-display p-3 bg-gray-100 rounded-lg mt-2">
+                                <div class="flex justify-between text-sm font-medium text-gray-700">
+                                    <span>❄️ Refrigeração Sugerida:</span>
+                                    <span id="suggested_cooling" class="font-bold">---</span>
+                                </div>
+                            </div>
+                            <!-- Fuel Feed (automatic based on tech/engine) -->
+                            <div class="fuel-feed-display p-3 bg-gray-100 rounded-lg mt-2">
+                                <div class="flex justify-between text-sm font-medium text-gray-700">
+                                    <span>⛽ Alimentação Sugerida:</span>
+                                    <span id="suggested_fuel_feed" class="font-bold">---</span>
+                                </div>
+                            </div>
+
+                            <!-- Engine Enhancements (checkboxes for selected engine/supercharger) -->
+                            <div id="engine_enhancements_checkboxes" class="mt-4">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Melhorias do Motor</label>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                    <!-- Checkboxes populados via JS -->
                                 </div>
                             </div>
                         </div>
@@ -371,6 +411,9 @@
                                             class="w-20 p-2 border border-gray-300 rounded focus:ring-2 focus:ring-red-500">
                                 </div>
                             </div>
+                            <p id="armament_limits_note" class="text-sm text-red-600 mt-2 hidden">
+                                ⚠️ Armamento limitado pela Posição/Formato da Asa.
+                            </p>
                         </div>
 
                         <!-- Defensive Armaments -->
