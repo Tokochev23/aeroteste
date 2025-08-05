@@ -48,7 +48,8 @@ window.onload = function() {
     // Agora, a maioria dos listeners do Passo 3 será gerenciada pelas funções de UI específicas
     document.querySelectorAll('input, select').forEach(element => {
         // Exclui 'aircraft_name', 'quantity', e os novos sliders do design wizard do debounce para uma atualização mais imediata
-        // Os sliders do design wizard e os botões de motor/supercharger têm seus próprios listeners em ui.js
+        // Os sliders de target-speed e target-range são tratados por updateDesignConsequences em ui.js
+        // Os botões de motor/supercharger são tratados por selectEngineType/selectSuperchargerType em ui.js
         if (element.id !== 'aircraft_name' && element.id !== 'quantity' &&
             element.id !== 'target-speed' && element.id !== 'target-range' &&
             !element.classList.contains('engine-choice-btn') && !element.classList.contains('supercharger-choice-btn')) {
@@ -56,7 +57,6 @@ window.onload = function() {
             element.addEventListener('change', debouncedUpdateCalculations); // Para selects
         } else {
             // Para 'aircraft_name' e 'quantity', atualiza imediatamente (sem debounce)
-            // Os sliders de target-speed e target-range são tratados por updateDesignConsequences em ui.js
             element.addEventListener('input', updateCalculations);
             element.addEventListener('change', updateCalculations);
         }
