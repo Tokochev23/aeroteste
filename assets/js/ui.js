@@ -856,7 +856,7 @@ function selectSuperchargerType(superchargerKey) {
     } else {
         comboWarningEl.classList.add('hidden');
         document.getElementById('performance-sliders-step').classList.remove('opacity-50', 'pointer-events-none');
-        export updatePerformanceSliders(comboLimits); // Atualiza os sliders com os limites da combinação
+        updatePerformanceSliders(comboLimits); // Atualiza os sliders com os limites da combinação
     }
 
     updateCalculations(); // Recalcula
