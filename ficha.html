@@ -169,16 +169,36 @@
                         <span id="structure_type" class="ml-2">-</span>
                     </div>
                     <div class="border-b pb-2">
-                        <span class="font-medium text-gray-700">Hélice:</span>
-                        <span id="propeller_type" class="ml-2">-</span>
-                    </div>
-                    <div class="border-b pb-2">
-                        <span class="font-medium text-gray-700">Refrigeração:</span>
-                        <span id="cooling_system" class="ml-2">-</span>
-                    </div>
-                    <div class="border-b pb-2">
-                        <span class="font-medium text-gray-700">Asa:</span>
+                        <span class="font-medium text-gray-700">Asa (Tipo):</span>
                         <span id="wing_type" class="ml-2">-</span>
+                    </div>
+                    <div class="border-b pb-2">
+                        <span class="font-medium text-gray-700">Asa (Posição):</span>
+                        <span id="wing_position" class="ml-2">-</span>
+                    </div>
+                    <div class="border-b pb-2">
+                        <span class="font-medium text-gray-700">Asa (Formato):</span>
+                        <span id="wing_shape" class="ml-2">-</span>
+                    </div>
+                    <div class="border-b pb-2">
+                        <span class="font-medium text-gray-700">Motor (Tipo):</span>
+                        <span id="engine_type_display" class="ml-2">-</span>
+                    </div>
+                    <div class="border-b pb-2">
+                        <span class="font-medium text-gray-700">Sobrealimentação:</span>
+                        <span id="supercharger_type_display" class="ml-2">-</span>
+                    </div>
+                    <div class="border-b pb-2">
+                        <span class="font-medium text-gray-700">Hélice Sugerida:</span>
+                        <span id="propeller_type_display" class="ml-2">-</span>
+                    </div>
+                    <div class="border-b pb-2">
+                        <span class="font-medium text-gray-700">Refrigeração Sugerida:</span>
+                        <span id="cooling_system_display" class="ml-2">-</span>
+                    </div>
+                    <div class="border-b pb-2">
+                        <span class="font-medium text-gray-700">Alimentação Sugerida:</span>
+                        <span id="fuel_feed_display" class="ml-2">-</span>
                     </div>
                     <div>
                         <span class="font-medium text-gray-700">Trem de Pouso:</span>
@@ -377,8 +397,16 @@
             document.getElementById('defensive_armament').textContent = aircraftData.defensiveArmamentTexts?.length > 0 ? aircraftData.defensiveArmamentTexts.join(', ') : 'Nenhum';
             document.getElementById('aircraft_type').textContent = aircraftData.typeData?.name || '-';
             document.getElementById('structure_type').textContent = aircraftData.inputs?.structureType ? gameData.components.structure_materials[aircraftData.inputs.structureType]?.name : '-';
-            document.getElementById('propeller_type').textContent = aircraftData.inputs?.propellerType ? gameData.components.propellers[aircraftData.inputs.propellerType]?.name : '-';
-            document.getElementById('cooling_system').textContent = aircraftData.inputs?.coolingSystem ? gameData.components.cooling_systems[aircraftData.inputs.coolingSystem]?.name : '-';
+            // NOVOS CAMPOS DE ASA
+            document.getElementById('wing_position').textContent = aircraftData.inputs?.wingPosition ? gameData.components.wing_positions[aircraftData.inputs.wingPosition]?.name : '-';
+            document.getElementById('wing_shape').textContent = aircraftData.inputs?.wingShape ? gameData.components.wing_shapes[aircraftData.inputs.wingShape]?.name : '-';
+            // NOVOS CAMPOS DE MOTOR SUGERIDO
+            document.getElementById('engine_type_display').textContent = aircraftData.inputs?.selectedEngineType ? gameData.components.engineTypes[aircraftData.inputs.selectedEngineType]?.name : '-';
+            document.getElementById('supercharger_type_display').textContent = aircraftData.inputs?.selectedSuperchargerType ? gameData.components.superchargerTypes[aircraftData.inputs.selectedSuperchargerType]?.name : '-';
+            document.getElementById('propeller_type_display').textContent = aircraftData.suggestedPropeller?.name || '-';
+            document.getElementById('cooling_system_display').textContent = aircraftData.suggestedCooling?.name || '-';
+            document.getElementById('fuel_feed_display').textContent = aircraftData.suggestedFuelFeed?.name || '-';
+
             document.getElementById('wing_type').textContent = aircraftData.inputs?.wingType ? gameData.components.wing_types[aircraftData.inputs.wingType]?.name : '-';
             document.getElementById('landing_gear_type').textContent = aircraftData.inputs?.landingGearType ? gameData.components.landing_gear_types[aircraftData.inputs.landingGearType]?.name : '-';
             populateEquipmentList('wing_features', aircraftData.inputs?.checkboxes?.wing_features.map(id => gameData.components.wing_features[id]?.name));
@@ -715,13 +743,28 @@
                                         <span style="font-weight: 600; color: #6b7280;">Estrutura:</span> ${aircraftData.inputs?.structureType ? gameData.components.structure_materials[aircraftData.inputs.structureType]?.name : '-'}
                                     </div>
                                     <div style="border-bottom: 1px solid #e5e7eb; padding-bottom: 4px;">
-                                        <span style="font-weight: 600; color: #6b7280;">Hélice:</span> ${aircraftData.inputs?.propellerType ? gameData.components.propellers[aircraftData.inputs.propellerType]?.name : '-'}
+                                        <span style="font-weight: 600; color: #6b7280;">Asa (Tipo):</span> ${aircraftData.inputs?.wingType ? gameData.components.wing_types[aircraftData.inputs.wingType]?.name : '-'}
                                     </div>
                                     <div style="border-bottom: 1px solid #e5e7eb; padding-bottom: 4px;">
-                                        <span style="font-weight: 600; color: #6b7280;">Refrigeração:</span> ${aircraftData.inputs?.coolingSystem ? gameData.components.cooling_systems[aircraftData.inputs.coolingSystem]?.name : '-'}
+                                        <span style="font-weight: 600; color: #6b7280;">Asa (Posição):</span> ${aircraftData.inputs?.wingPosition ? gameData.components.wing_positions[aircraftData.inputs.wingPosition]?.name : '-'}
                                     </div>
                                     <div style="border-bottom: 1px solid #e5e7eb; padding-bottom: 4px;">
-                                        <span style="font-weight: 600; color: #6b7280;">Asa:</span> ${aircraftData.inputs?.wingType ? gameData.components.wing_types[aircraftData.inputs.wingType]?.name : '-'}
+                                        <span style="font-weight: 600; color: #6b7280;">Asa (Formato):</span> ${aircraftData.inputs?.wingShape ? gameData.components.wing_shapes[aircraftData.inputs.wingShape]?.name : '-'}
+                                    </div>
+                                    <div style="border-bottom: 1px solid #e5e7eb; padding-bottom: 4px;">
+                                        <span style="font-weight: 600; color: #6b7280;">Motor (Tipo):</span> ${aircraftData.inputs?.selectedEngineType ? gameData.components.engineTypes[aircraftData.inputs.selectedEngineType]?.name : '-'}
+                                    </div>
+                                    <div style="border-bottom: 1px solid #e5e7eb; padding-bottom: 4px;">
+                                        <span style="font-weight: 600; color: #6b7280;">Sobrealimentação:</span> ${aircraftData.inputs?.selectedSuperchargerType ? gameData.components.superchargerTypes[aircraftData.inputs.selectedSuperchargerType]?.name : '-'}
+                                    </div>
+                                    <div style="border-bottom: 1px solid #e5e7eb; padding-bottom: 4px;">
+                                        <span style="font-weight: 600; color: #6b7280;">Hélice Sugerida:</span> ${aircraftData.suggestedPropeller?.name || '-'}
+                                    </div>
+                                    <div style="border-bottom: 1px solid #e5e7eb; padding-bottom: 4px;">
+                                        <span style="font-weight: 600; color: #6b7280;">Refrigeração Sugerida:</span> ${aircraftData.suggestedCooling?.name || '-'}
+                                    </div>
+                                    <div style="border-bottom: 1px solid #e5e7eb; padding-bottom: 4px;">
+                                        <span style="font-weight: 600; color: #6b7280;">Alimentação Sugerida:</span> ${aircraftData.suggestedFuelFeed?.name || '-'}
                                     </div>
                                     <div style="padding-bottom: 4px;">
                                         <span style="font-weight: 600; color: #6b7280;">Trem de Pouso:</span> ${aircraftData.inputs?.landingGearType ? gameData.components.landing_gear_types[aircraftData.inputs.landingGearType]?.name : '-'}
