@@ -50,8 +50,9 @@ export function updateUI(performance) {
                 if (id === 'display_name') el.textContent = 'Sem nome';
                 else if (['display_type', 'display_doctrine', 'display_country_tech_civil', 'display_country_air_tech', 'display_country_urbanization', 'display_country_cost_reduction'].includes(id)) el.textContent = 'N/A';
                 else if (id === 'main_armament') el.textContent = 'Desarmado';
-                else if (['suggested_propeller', 'suggested_cooling', 'suggested_fuel_feed', 'engine_type_display', 'supercharger_type_display'].includes(id)) el.textContent = '---';
+                else if (['suggested_propeller', 'suggested_cooling', 'suggested_fuel_feed'].includes(id)) el.textContent = '---';
                 else if (['speed-value', 'range-value', 'max-altitude', 'speed-min', 'speed-max', 'range-min', 'range-max'].includes(id)) el.textContent = '---';
+                else if (['engine_type_display', 'supercharger_type_display'].includes(id)) el.textContent = '-'; // Corrigido para mostrar '-' em vez de '---'
                 else el.textContent = '0';
             }
         });
@@ -114,8 +115,8 @@ export function updateUI(performance) {
         'speed-value': `${inputs.targetSpeed} km/h`,
         'range-value': `${inputs.targetRange} km`,
         'max-altitude': `${Math.round(finalServiceCeiling).toLocaleString('pt-BR')} metros`,
-        'engine_type_display': gameData.components.engineTypes[selectedEngineType]?.name || '---', // Display no resumo
-        'supercharger_type_display': gameData.components.superchargerTypes[selectedSuperchargerType]?.name || '---' // Display no resumo
+        'engine_type_display': gameData.components.engineTypes[inputs.selectedEngineType]?.name || '-', // Display no resumo
+        'supercharger_type_display': gameData.components.superchargerTypes[inputs.selectedSuperchargerType]?.name || '-' // Display no resumo
     };
     Object.entries(formattedElements).forEach(([id, value]) => {
         const el = document.getElementById(id);
@@ -542,10 +543,13 @@ export function applyTechLevelRestrictions(techLevel) {
 
     // Encontra o tier de tecnologia aplicável
     let currentTier = null;
+    // Garante que o tier mais alto aplicável é selecionado
     for (const tierKey in techLevelRestrictions) {
         const tier = techLevelRestrictions[tierKey];
         if (techLevel >= tier.min_tech) {
-            currentTier = tier;
+            if (!currentTier || tier.min_tech > currentTier.min_tech) {
+                currentTier = tier;
+            }
         }
     }
 
@@ -591,10 +595,10 @@ export function applyTechLevelRestrictions(techLevel) {
 
         // Aplica restrições de tech_level_required para selects e checkboxes
         if (componentData && componentData.tech_level_required !== undefined) {
-            if (techLevel < componentData.tech_level_required) {
+            if (techLevel < componentData.tech_level_required) { // Usando techLevel (parâmetro) aqui
                 if (element.tagName === 'SELECT') {
                     // Desabilita a opção específica dentro do select
-                    const option = element.querySelector(`option[value="${componentId}"]`);
+                    const option = element.querySelector(`option[value="${key}"]`); // Usar 'key' da iteração, não 'componentId'
                     if (option) {
                         option.disabled = true;
                         option.dataset.originalText = option.textContent; // Salva o texto original
@@ -983,144 +987,130 @@ function populateEngineEnhancementsCheckboxes() {
  * Popula os dropdowns e checkboxes com base no nível de tecnologia do país.
  * Esta função é chamada ao carregar a página e ao mudar o país.
  */
-export function populateTechRestrictedFields() {
-    const currentTechLevel = gameData.currentCountryTechLevel || 0;
+export function populateTechRestrictedFields(techLevel) { // Parâmetro techLevel adicionado
+    gameData.currentCountryTechLevel = techLevel; // Salva o nível de tecnologia atual no gameData
 
-    // Dropdowns e Checkboxes gerais
-    const fieldsToRestrict = [
-        { selector: '#structure_type', data: gameData.components.structure_materials },
-        { selector: '#wing_type', data: gameData.components.wing_types },
-        { selector: '#landing_gear_type', data: gameData.components.landing_gear_types },
-        { selector: '#propeller_type', data: gameData.components.propellers },
-        { selector: '#cooling_system', data: gameData.components.cooling_systems },
-        { selector: '#fuel_feed', data: gameData.components.fuel_feeds },
-        { selector: '#defensive_turret_type', data: gameData.components.defensive_armaments },
-    ];
-
-    fieldsToRestrict.forEach(({ selector, data }) => {
-        const selectElement = document.querySelector(selector);
-        if (selectElement) {
-            // Salva o valor atual para tentar restaurar após a atualização
-            const currentValue = selectElement.value;
-            selectElement.innerHTML = ''; // Limpa opções existentes
-
-            // Adiciona uma opção padrão se não for um dropdown de tipo de aeronave
-            if (selector !== '#aircraft_type') {
-                const defaultOption = document.createElement('option');
-                defaultOption.value = '';
-                defaultOption.textContent = `Selecione um ${selectElement.labels[0]?.textContent.replace(':', '') || 'tipo'}`;
-                selectElement.appendChild(defaultOption);
-            }
-
-            let selectedValueRestored = false;
-            Object.entries(data).forEach(([key, item]) => {
-                const option = document.createElement('option');
-                option.value = key;
-                option.textContent = item.name;
-                
-                const isBlockedByTech = item.tech_level_required && currentTechLevel < item.tech_level_required;
-                // Verifica se o componente está na lista de bloqueados do tier atual
-                const currentTier = Object.values(techLevelRestrictions).find(tier => techLevel >= tier.min_tech) || techLevelRestrictions.tier_primitive;
-                const isBlockedByTierList = currentTier.blocked_components.includes(key);
-
-                if (isBlockedByTech || isBlockedByTierList) {
-                    option.disabled = true;
-                    option.textContent += ` (Requer Tec. ${item.tech_level_required || currentTier.min_tech}+)`;
-                }
-                selectElement.appendChild(option);
-
-                // Tenta restaurar a seleção anterior se for válida
-                if (key === currentValue && !option.disabled) {
-                    selectElement.value = currentValue;
-                    selectedValueRestored = true;
-                }
-            });
-            // Se o valor anterior não é mais válido, seleciona o primeiro válido ou o padrão
-            if (!selectedValueRestored && selectElement.value !== currentValue) {
-                selectElement.value = ''; // Reseta para o default
+    // Encontra o tier de tecnologia aplicável
+    let currentTier = null;
+    // Garante que o tier mais alto aplicável é selecionado
+    for (const tierKey in techLevelRestrictions) {
+        const tier = techLevelRestrictions[tierKey];
+        if (techLevel >= tier.min_tech) {
+            if (!currentTier || tier.min_tech > currentTier.min_tech) {
+                currentTier = tier;
             }
         }
-    });
-
-    // Filtra os checkboxes de armamentos ofensivos
-    const offensiveArmamentsContainer = document.querySelector('#offensive_armaments .grid');
-    if (offensiveArmamentsContainer) {
-        Array.from(offensiveArmamentsContainer.children).forEach(div => {
-            const input = div.querySelector('input[type="number"]');
-            if (input) {
-                const armamentId = input.id;
-                const armamentData = gameData.components.armaments[armamentId];
-                const currentTier = Object.values(techLevelRestrictions).find(tier => techLevel >= tier.min_tech) || techLevelRestrictions.tier_primitive;
-
-                if (armamentData && (armamentData.tech_level_required && currentTechLevel < armamentData.tech_level_required || currentTier.blocked_components.includes(armamentId))) {
-                    input.disabled = true;
-                    input.value = 0;
-                    div.classList.add('opacity-50'); // Diminui a opacidade para indicar desabilitado
-                    div.querySelector('label').textContent = `${armamentData.name} (Requer Tec. ${armamentData.tech_level_required || currentTier.min_tech}+)`;
-                } else {
-                    input.disabled = false;
-                    div.classList.remove('opacity-50');
-                    div.querySelector('label').textContent = armamentData.name; // Restaura o texto original
-                }
-            }
-        });
     }
 
-    // Filtra os checkboxes de armamentos defensivos (apenas os inputs number)
-    const defensiveArmamentsContainer = document.querySelector('#defensive_armaments .grid');
-    if (defensiveArmamentsContainer) {
-        Array.from(defensiveArmamentsContainer.children).forEach(div => {
-            const input = div.querySelector('input[type="number"]');
-            if (input) {
-                const armamentId = input.id;
-                const armamentData = gameData.components.defensive_armaments[armamentId];
-                const currentTier = Object.values(techLevelRestrictions).find(tier => techLevel >= tier.min_tech) || techLevelRestrictions.tier_primitive;
-
-                if (armamentData && (armamentData.tech_level_required && currentTechLevel < armamentData.tech_level_required || currentTier.blocked_components.includes(armamentId))) {
-                    input.disabled = true;
-                    input.value = 0;
-                    div.classList.add('opacity-50');
-                    div.querySelector('label').textContent = `${armamentData.name.replace(' (Defensiva)', '')} (Requer Tec. ${armamentData.tech_level_required || currentTier.min_tech}+)`;
-                } else {
-                    input.disabled = false;
-                    div.classList.remove('opacity-50');
-                    div.querySelector('label').textContent = armamentData.name.replace(' (Defensiva)', '');
-                }
-            }
-        });
+    // Se nenhum tier for encontrado (ex: techLevel < 0), usa o mais primitivo
+    if (!currentTier) {
+        currentTier = techLevelRestrictions.tier_primitive;
     }
 
-    // Filtra os checkboxes de outras categorias
-    const checkboxCategories = ['wing_features', 'protection', 'cockpit_comfort', 'advanced_avionics', 'equipment', 'maintainability_features'];
-    checkboxCategories.forEach(category => {
-        const container = document.getElementById(`${category}_checkboxes`);
-        if (container) {
-            Array.from(container.querySelectorAll('.checkbox-row')).forEach(div => {
-                const input = div.querySelector('input[type="checkbox"]');
-                if (input) {
-                    const componentId = input.id;
-                    const componentData = findItemAcrossCategories(componentId); // Usa a função auxiliar
-                    const currentTier = Object.values(techLevelRestrictions).find(tier => techLevel >= tier.min_tech) || techLevelRestrictions.tier_primitive;
+    // Popula e filtra os dropdowns de asa (chamada aqui para garantir que o techLevel esteja atualizado)
+    populateWingDropdowns();
 
-                    if (componentData && (componentData.tech_level_required && currentTechLevel < componentData.tech_level_required || currentTier.blocked_components.includes(componentId))) {
-                        input.checked = false;
-                        input.disabled = true;
-                        div.classList.add('hidden'); // Esconde o checkbox
-                        div.querySelector('label').textContent = `${componentData.name} (Requer Tec. ${componentData.tech_level_required || currentTier.min_tech}+)`;
-                    } else {
-                        input.disabled = false;
-                        div.classList.remove('hidden');
-                        div.querySelector('label').textContent = componentData ? componentData.name : input.labels[0]?.textContent; // Restaura o texto original
+    // Itera sobre todos os selects e checkboxes para aplicar restrições
+    document.querySelectorAll('select, input[type="checkbox"]').forEach(element => {
+        const componentId = element.id;
+        const componentData = findItemAcrossCategories(componentId);
+
+        // Resetar estado de desabilitado e oculto
+        element.disabled = false;
+        if (element.closest('.checkbox-row')) { // Para checkboxes, esconde a linha inteira
+            element.closest('.checkbox-row').classList.remove('hidden');
+        } else if (element.tagName === 'OPTION') { // Para opções dentro de selects
+            element.disabled = false;
+            element.textContent = element.dataset.originalText || element.textContent.replace(/ \(Requer Tec\. \d+\+\)/g, ''); // Remove o texto de restrição
+        } else if (element.tagName === 'SELECT') {
+            // Não desabilita o select inteiro, apenas as opções
+        }
+
+        // Aplica restrições de componentes bloqueados
+        if (currentTier.blocked_components.includes(componentId)) {
+            if (element.tagName === 'SELECT') {
+                // Se o select inteiro é bloqueado, desabilita e seleciona a primeira opção válida se houver
+                element.disabled = true;
+                element.value = ''; // Limpa a seleção
+                if (element.options.length > 0) element.value = element.options[0].value; // Seleciona o primeiro
+            } else if (element.type === 'checkbox') {
+                element.checked = false; // Desmarca
+                element.disabled = true;
+                if (element.closest('.checkbox-row')) {
+                    element.closest('.checkbox-row').classList.add('hidden'); // Esconde o checkbox
+                }
+            }
+        }
+
+        // Aplica restrições de tech_level_required para selects e checkboxes
+        if (componentData && componentData.tech_level_required !== undefined) {
+            if (techLevel < componentData.tech_level_required) { // Usando techLevel (parâmetro) aqui
+                if (element.tagName === 'SELECT') {
+                    // Desabilita a opção específica dentro do select
+                    // Precisa iterar sobre as opções para desabilitar corretamente
+                    Array.from(element.options).forEach(option => {
+                        if (option.value === componentId) {
+                            option.disabled = true;
+                            option.dataset.originalText = option.textContent; // Salva o texto original
+                            option.textContent += ` (Requer Tec. ${componentData.tech_level_required}+)`;
+                        }
+                    });
+                } else if (element.type === 'checkbox') {
+                    element.checked = false; // Desmarca
+                    element.disabled = true;
+                    if (element.closest('.checkbox-row')) {
+                        element.closest('.checkbox-row').classList.add('hidden'); // Esconde o checkbox
                     }
                 }
-            });
+            }
         }
     });
 
-    // Popula a seleção de tipos de motor (Passo 3)
-    populateEngineTypeSelection();
-    // Popula os checkboxes de melhorias do motor (Passo 3)
-    populateEngineEnhancementsCheckboxes();
+    // Lógica específica para o dropdown de tipo de asa (wing_type)
+    const wingTypeSelect = document.getElementById('wing_type');
+    if (wingTypeSelect) {
+        // Se o país está no tier primitivo, força o biplano
+        if (currentTier.forced_wing_type === 'biplane_wing_pos') {
+            wingTypeSelect.value = 'biplane';
+            wingTypeSelect.disabled = true;
+        } else {
+            wingTypeSelect.disabled = false;
+        }
+    }
 
-    updateCalculations(); // Recalcula após aplicar todas as restrições
+    // Lógica específica para o dropdown de posição da asa (wing_position)
+    const wingPositionSelect = document.getElementById('wing_position');
+    if (wingPositionSelect) {
+        // Se o tipo de asa é biplano, força a posição "Biplano"
+        if (document.getElementById('wing_type')?.value === 'biplane') {
+            wingPositionSelect.value = 'biplane_wing_pos';
+            wingPositionSelect.disabled = true;
+            updateWingPositionInfo(); // Atualiza a info da asa
+        } else {
+            wingPositionSelect.disabled = false;
+            // Se a posição atual for biplano e o tipo de asa mudou, reseta a posição
+            if (wingPositionSelect.value === 'biplane_wing_pos') {
+                wingPositionSelect.value = '';
+                updateWingPositionInfo();
+            }
+        }
+    }
+
+    // Lógica para os novos tipos de motor (Passo 3)
+    populateEngineTypeSelection();
+    // Limpa a seleção atual de motor/supercharger se o nível de tecnologia mudou
+    selectedEngineType = null;
+    selectedSuperchargerType = null;
+    document.getElementById('engine-selected-info').classList.add('hidden');
+    document.getElementById('supercharger-step').classList.add('opacity-50', 'pointer-events-none');
+    document.getElementById('supercharger-selected-info').classList.add('hidden');
+    document.getElementById('combo-warning').classList.add('hidden');
+    document.getElementById('performance-sliders-step').classList.add('opacity-50', 'pointer-events-none');
+    document.getElementById('target-speed').disabled = true;
+    document.getElementById('target-range').disabled = true;
+    document.getElementById('target-speed').value = 0; // Resetar valores
+    document.getElementById('target-range').value = 0;
+    updateUI(null); // Limpa a UI para refletir o reset
+
+    updateCalculations(); // Recalcula tudo após aplicar as restrições
 }
