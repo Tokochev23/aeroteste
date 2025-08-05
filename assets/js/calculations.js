@@ -1,10 +1,10 @@
 // assets/js/calculations.js
 
-import { gameData, realWorldAircraft } from './data.js';
-import { updateUI, updateProgress, updateStatusAndWarnings } from './ui.js';
+import { gameData, techLevelRestrictions, engineSuperchargerCombos, performanceTradeoffs, designPenalties } from './data.js';
+import { updateUI, updateProgress, updateStatusAndWarnings, selectedEngineType, selectedSuperchargerType } from './ui.js'; // Importa selectedEngineType e selectedSuperchargerType
 import { stateManager, autoSaveManager } from './managers.js';
 
-// --- FUNÇÕES DE CÁLCULO AERODINÂMICO E DE PERFORMANCE ---
+// --- FUNÇÕES DE CÁLCULO AERODINÂMICO E DE PERFORMANCE --
 
 /**
  * Calcula as propriedades do ar (densidade, temperatura, pressão) em uma dada altitude.
@@ -36,17 +36,31 @@ export function getAirPropertiesAtAltitude(h_m) {
  */
 export function calculateEnginePowerAtAltitude(basePower, h, superchargerData) {
     let currentPower = 0;
-    if (!superchargerData || superchargerData.name === "Nenhum") {
+    if (!superchargerData || superchargerData.name === "Aspiração Natural") { // Alterado para "Aspiração Natural"
         const currentAltProps = getAirPropertiesAtAltitude(h);
         const densityRatio = currentAltProps.density / gameData.constants.density_sea_level_kg_m3;
         currentPower = basePower * densityRatio;
-    } else if (h <= superchargerData.rated_altitude_m) {
-        currentPower = basePower;
+    } else if (superchargerData.characteristics.optimal_altitude && h <= superchargerData.characteristics.optimal_altitude) {
+        currentPower = basePower * (superchargerData.characteristics.power_modifier || 1.0);
+    } else if (superchargerData.characteristics.optimal_altitudes) {
+        // Para superchargers com múltiplas altitudes ótimas
+        const optimalAlt = superchargerData.characteristics.optimal_altitudes.reduce((prev, curr) =>
+            Math.abs(curr - h) < Math.abs(prev - h) ? curr : prev
+        );
+        if (h <= optimalAlt) {
+            currentPower = basePower * (superchargerData.characteristics.power_modifier || 1.0);
+        } else {
+            const optimalAltProps = getAirPropertiesAtAltitude(optimalAlt);
+            const currentAltProps = getAirPropertiesAtAltitude(h);
+            const densityRatio = currentAltProps.density / optimalAltProps.density;
+            currentPower = basePower * (superchargerData.characteristics.power_modifier || 1.0) * densityRatio;
+        }
     } else {
-        const ratedAltProps = getAirPropertiesAtAltitude(superchargerData.rated_altitude_m);
+        // Fallback para superchargers com apenas altitude limite
+        const ratedAltProps = getAirPropertiesAtAltitude(superchargerData.characteristics.altitude_limit);
         const currentAltProps = getAirPropertiesAtAltitude(h);
         const densityRatio = currentAltProps.density / ratedAltProps.density;
-        currentPower = basePower * densityRatio;
+        currentPower = basePower * (superchargerData.characteristics.power_modifier || 1.0) * densityRatio;
     }
 
     // Aplica o diminishing return de potência acima de 1000 HP
@@ -222,14 +236,13 @@ export function updateCalculations() {
         aircraftType: document.getElementById('aircraft_type')?.value,
         structureType: document.getElementById('structure_type')?.value,
         wingType: document.getElementById('wing_type')?.value,
+        wingPosition: document.getElementById('wing_position')?.value, // NOVO
+        wingShape: document.getElementById('wing_shape')?.value,       // NOVO
         landingGearType: document.getElementById('landing_gear_type')?.value,
-        engineType: document.getElementById('engine_type')?.value,
-        numEngines: parseInt(document.getElementById('num_engines')?.value) || 1,
-        enginePower: parseInt(document.getElementById('engine_power')?.value) || 0,
-        propellerType: document.getElementById('propeller_type')?.value,
-        coolingSystem: document.getElementById('cooling_system')?.value,
-        fuelFeed: document.getElementById('fuel_feed')?.value,
-        supercharger: document.getElementById('supercharger')?.value,
+        // Removido engineType, numEngines, enginePower, propellerType, coolingSystem, fuelFeed, supercharger
+        // Agora são inferidos ou baseados nas seleções do Design Wizard
+        targetSpeed: parseInt(document.getElementById('target-speed')?.value) || 0, // NOVO
+        targetRange: parseInt(document.getElementById('target-range')?.value) || 0, // NOVO
         numCrewmen: parseInt(document.getElementById('num_crewmen')?.value) || 1,
         productionQualitySliderValue: parseInt(document.getElementById('production_quality_slider')?.value) || 50,
         defensiveTurretType: document.getElementById('defensive_turret_type')?.value,
@@ -253,33 +266,40 @@ export function updateCalculations() {
 
     // --- VALIDAÇÃO E CONFIGURAÇÃO DE DADOS ---
     const typeData = gameData.components.aircraft_types[inputs.aircraftType];
-    const engineData = gameData.components.engines[inputs.engineType];
     const structureData = gameData.components.structure_materials[inputs.structureType];
     const wingData = gameData.components.wing_types[inputs.wingType];
+    const wingPositionData = gameData.components.wing_positions[inputs.wingPosition]; // NOVO
+    const wingShapeData = gameData.components.wing_shapes[inputs.wingShape];         // NOVO
     const landingGearData = gameData.components.landing_gear_types[inputs.landingGearType];
-    const propData = gameData.components.propellers[inputs.propellerType];
-    const coolingData = gameData.components.cooling_systems[inputs.coolingSystem];
-    const fuelFeedData = gameData.components.fuel_feeds[inputs.fuelFeed];
-    const superchargerData = gameData.components.superchargers[inputs.supercharger];
     const doctrineData = gameData.doctrines[inputs.selectedAirDoctrine];
 
-    // Atualiza as descrições na página principal
-    document.getElementById('aircraft_type_note').textContent = typeData ? typeData.description : '';
-    document.getElementById('structure_note').textContent = structureData ? structureData.description : '';
-    document.getElementById('wing_type_note').textContent = wingData ? wingData.description : '';
-    document.getElementById('landing_gear_type_note').textContent = landingGearData ? landingGearData.description : '';
-    document.getElementById('engine_type_note').textContent = engineData ? engineData.description : '';
-    document.getElementById('propeller_type_note').textContent = propData ? propData.description : '';
-    document.getElementById('cooling_system_note').textContent = coolingData ? coolingData.description : '';
-    document.getElementById('fuel_feed_note').textContent = fuelFeedData ? fuelFeedData.description : '';
-    document.getElementById('supercharger_note').textContent = superchargerData ? superchargerData.description : "Selecione uma doutrina para ver seus efeitos.";
+    // Obter dados do motor e supercharger selecionados globalmente
+    const engineData = gameData.components.engineTypes[selectedEngineType];
+    const superchargerData = gameData.components.superchargerTypes[selectedSuperchargerType];
 
     // Validação inicial para componentes essenciais
-    if (!typeData || !engineData || inputs.enginePower <= 0 || !propData || !superchargerData) {
+    if (!typeData || !structureData || !wingData || !wingPositionData || !wingShapeData || !landingGearData || !engineData || !superchargerData || inputs.targetSpeed <= 0 || inputs.targetRange <= 0) {
         updateUI(null); // Limpa a UI se dados essenciais estiverem faltando
         updateProgress();
         return null;
     }
+
+    // --- INFERÊNCIA DE COMPONENTES DE MOTOR E PROPULSÃO ---
+    // Calcula os requisitos de motor com base na velocidade alvo
+    const engineRequirements = performanceTradeoffs.calculateEngineRequirements(inputs.targetSpeed, inputs.aircraftType);
+    let totalEnginePower = engineRequirements.power_needed_hp * engineRequirements.number_of_engines;
+    let numEngines = engineRequirements.number_of_engines;
+
+    // Sugere hélice, refrigeração e alimentação de combustível
+    const suggestedPropeller = gameData.components.propellers[engineRequirements.propeller_type];
+    // Refrigeração: Líquida para V-inline, Ar para Radial/Rotativo/Dupla Estrela/X
+    const suggestedCooling = (selectedEngineType === 'v_inline' || selectedEngineType === 'x_configuration') ? gameData.components.cooling_systems.liquid : gameData.components.cooling_systems.air;
+    // Alimentação: Injeção se tech_level_air for alto o suficiente, senão Carburador
+    const suggestedFuelFeed = (gameData.currentCountryTechLevel >= gameData.components.fuel_feeds.injection.tech_level_required) ? gameData.components.fuel_feeds.injection : gameData.components.fuel_feeds.carburetor;
+
+    const propData = suggestedPropeller; // Usa a hélice sugerida
+    const coolingData = suggestedCooling;
+    const fuelFeedData = suggestedFuelFeed;
 
     // --- CALCULAR ESTATÍSTICAS BASE E MODIFICADORES ---
     let baseUnitCost = typeData.cost;
@@ -310,11 +330,12 @@ export function updateCalculations() {
         }
     }
 
-    // Estrutura, Asas, Trem de Pouso
+    // Estrutura
     baseUnitCost *= structureData.cost_mod;
     totalEmptyWeight *= structureData.weight_mod;
     reliabilityModifier *= structureData.reliability_mod;
 
+    // Tipo de Asa (Biplano, Monoplano)
     baseUnitCost *= wingData.cost_mod;
     totalEmptyWeight *= wingData.weight_mod;
     aero.drag_mod *= wingData.drag_mod;
@@ -324,6 +345,23 @@ export function updateCalculations() {
     aero.maneuverability_mod *= wingData.maneuverability_mod || 1.0;
     reliabilityModifier *= wingData.reliability_mod;
 
+    // Posição da Asa (NOVO)
+    baseUnitCost *= (wingPositionData.cost_mod || 1.0);
+    totalEmptyWeight *= (wingPositionData.structure_weight_mod || 1.0);
+    reliabilityModifier *= (wingPositionData.reliability_mod || 1.0);
+    aero.drag_mod *= (wingPositionData.drag_mod || 1.0);
+    aero.maneuverability_mod *= (wingPositionData.turn_mod || 1.0);
+    // Outros modificadores da posição da asa podem ser aplicados aqui (estabilidade, etc.)
+
+    // Formato da Asa (NOVO)
+    baseUnitCost *= (wingShapeData.cost_mod || 1.0);
+    totalEmptyWeight *= (wingShapeData.weight_mod || 1.0); // Se houver
+    reliabilityModifier *= (wingShapeData.reliability_mod || 1.0); // Se houver
+    aero.drag_mod *= (wingShapeData.drag_mod || 1.0);
+    aero.maneuverability_mod *= (wingShapeData.turn_mod || 1.0);
+    // Outros modificadores do formato da asa podem ser aplicados aqui
+
+    // Trem de Pouso
     baseUnitCost += landingGearData.cost;
     totalEmptyWeight += landingGearData.weight;
     baseMetalCost += landingGearData.metal_cost;
@@ -331,39 +369,56 @@ export function updateCalculations() {
     reliabilityModifier *= landingGearData.reliability_mod;
 
     // --- NOVO: Aplicar área frontal do motor ao arrasto ---
-    aero.drag_mod *= engineData.frontal_area_mod || 1.0;
+    // Usar o modificador de área frontal do tipo de motor selecionado
+    aero.drag_mod *= (engineData.characteristics.frontal_area_tiny || 1.0) * (engineData.characteristics.drag_penalty || 1.0) * (engineData.characteristics.drag_reduction || 1.0);
 
-    // Motores e Propulsão
-    let totalEnginePower = 0;
-    const enginePowerNote = document.getElementById('engine_power_note');
-    if (enginePowerNote) enginePowerNote.textContent = "";
+    // Motores e Propulsão (Baseado nas seleções do Design Wizard)
+    baseUnitCost += (engineData.cost || 0) * numEngines; // Custo base do tipo de motor
+    baseUnitCost += (engineRequirements.cost_multiplier - 1) * baseUnitCost; // Multiplicador de custo da potência
+    baseMetalCost += (engineData.metal_cost || 0) * numEngines;
+    totalEmptyWeight += (engineData.weight || 0) * numEngines;
+    totalEmptyWeight *= engineRequirements.engine_weight_penalty; // Penalidade de peso por múltiplos motores
+    reliabilityModifier *= Math.pow(engineData.characteristics.reliability_bonus || 1.0, numEngines);
+    reliabilityModifier *= Math.pow(engineData.characteristics.reliability_penalty || 1.0, numEngines);
+    reliabilityModifier *= engineRequirements.reliability_penalty; // Penalidade de confiabilidade por múltiplos motores
 
-    if (inputs.enginePower < engineData.min_power || inputs.enginePower > engineData.max_power) {
-        if (enginePowerNote) enginePowerNote.textContent = `Potência para ${engineData.name} deve ser entre ${engineData.min_power} e ${engineData.max_power} HP.`;
-        updateUI(null); // Limpa a UI se a potência do motor for inválida
-        updateProgress();
-        return null;
-    } else {
-        totalEnginePower = inputs.enginePower * inputs.numEngines;
-        baseUnitCost += (engineData.cost + (inputs.enginePower * 20)) * inputs.numEngines;
-        baseMetalCost += engineData.metal_cost * inputs.numEngines;
-        totalEmptyWeight += engineData.weight * inputs.numEngines;
-        reliabilityModifier *= Math.pow(engineData.reliability, inputs.numEngines);
+    baseUnitCost += propData.cost * numEngines;
+    totalEmptyWeight += propData.weight * numEngines;
+    baseMetalCost += propData.metal_cost * numEngines;
+    reliabilityModifier *= Math.pow(propData.reliability_mod, numEngines);
+
+    // Outros sistemas por motor (Refrigeração, Alimentação de Combustível, Sobrealimentador)
+    [coolingData, fuelFeedData, superchargerData].forEach(data => {
+        baseUnitCost += (data.cost || 0) * numEngines;
+        totalEmptyWeight += (data.weight || 0) * numEngines;
+        reliabilityModifier *= Math.pow(data.reliability_mod || 1.0, numEngines);
+        aero.drag_mod *= data.drag_mod || 1.0;
+        aero.power_mod *= data.performance_mod || data.power_modifier || 1.0;
+        reliabilityModifier *= (data.characteristics?.reliability_bonus || 1.0);
+        reliabilityModifier *= (data.characteristics?.reliability_modifier || 1.0);
+    });
+
+    // Penalidades de Design (Velocidade e Alcance)
+    const speedPenaltyTier = Object.keys(designPenalties.speedPenalties)
+        .sort((a, b) => parseInt(a) - parseInt(b))
+        .find(tier => inputs.targetSpeed <= parseInt(tier));
+    if (speedPenaltyTier) {
+        const penalties = designPenalties.speedPenalties[speedPenaltyTier];
+        aero.maneuverability_mod *= (penalties.turn_rate_penalty || 1.0);
+        aero.ceiling_mod *= (penalties.climb_rate_penalty || 1.0);
+        reliabilityModifier *= (penalties.reliability_penalty || 1.0); // Se houver penalidade de confiabilidade
+        baseUnitCost *= (penalties.maintenance_multiplier || 1.0); // Impacto no custo via manutenção
     }
 
-    baseUnitCost += propData.cost * inputs.numEngines;
-    totalEmptyWeight += propData.weight * inputs.numEngines;
-    baseMetalCost += propData.metal_cost * inputs.numEngines;
-    reliabilityModifier *= Math.pow(propData.reliability_mod, inputs.numEngines);
+    const rangePenaltyTier = Object.keys(designPenalties.rangePenalties)
+        .sort((a, b) => parseInt(a) - parseInt(b))
+        .find(tier => inputs.targetRange <= parseInt(tier));
+    if (rangePenaltyTier) {
+        const penalties = designPenalties.rangePenalties[rangePenaltyTier];
+        totalEmptyWeight *= (penalties.weight_penalty || 1.0);
+        aero.maneuverability_mod *= (penalties.maneuverability_penalty || 1.0);
+    }
 
-    // Outros sistemas por motor
-    [coolingData, fuelFeedData, superchargerData].forEach(data => {
-        baseUnitCost += (data.cost || 0) * inputs.numEngines;
-        totalEmptyWeight += (data.weight || 0) * inputs.numEngines;
-        reliabilityModifier *= Math.pow(data.reliability_mod || 1.0, inputs.numEngines);
-        aero.drag_mod *= data.drag_mod || 1.0;
-        aero.power_mod *= data.performance_mod || data.power_mod || 1.0;
-    });
 
     // Processa todos os componentes baseados em checkboxes
     for (const categoryKey in inputs.checkboxes) {
@@ -388,14 +443,32 @@ export function updateCalculations() {
     // Armamentos
     let armamentWeight = 0, armamentCost = 0, armamentMetalCost = 0;
     let offensiveArmamentTexts = [];
+    let armamentLimitExceeded = false; // Flag para avisar sobre limites de armamento
+
     inputs.armaments.offensive.forEach(arm => {
         if (arm.qty > 0) {
             const armData = gameData.components.armaments[arm.id];
             if (armData) {
-                armamentCost += armData.cost * arm.qty;
-                armamentWeight += armData.weight * arm.qty;
-                armamentMetalCost += armData.metal_cost * arm.qty;
-                offensiveArmamentTexts.push(`${arm.qty}x ${armData.name}`);
+                // Aplica limites de armamento da asa
+                let maxAllowed = Infinity;
+                if (wingPositionData.armament_limits && wingPositionData.armament_limits[arm.id] !== undefined) {
+                    maxAllowed = Math.min(maxAllowed, wingPositionData.armament_limits[arm.id]);
+                }
+                if (wingShapeData.armament_limits && wingShapeData.armament_limits[arm.id] !== undefined) {
+                    maxAllowed = Math.min(maxAllowed, wingShapeData.armament_limits[arm.id]);
+                }
+
+                let finalQty = Math.min(arm.qty, maxAllowed);
+                if (finalQty < arm.qty) {
+                    armamentLimitExceeded = true; // Sinaliza que o limite foi excedido
+                }
+
+                if (finalQty > 0) {
+                    armamentCost += armData.cost * finalQty;
+                    armamentWeight += armData.weight * finalQty;
+                    armamentMetalCost += armData.metal_cost * finalQty;
+                    offensiveArmamentTexts.push(`${finalQty}x ${armData.name}`);
+                }
             }
         }
     });
@@ -424,7 +497,7 @@ export function updateCalculations() {
     }
 
     // --- PESO FINAL E CUSTO ---
-    const fuelCapacity = gameData.constants.base_fuel_capacity_liters * (totalEmptyWeight / 2000) * Math.sqrt(inputs.numEngines);
+    const fuelCapacity = gameData.constants.base_fuel_capacity_liters * (totalEmptyWeight / 2000) * Math.sqrt(numEngines);
     const fuelWeight = fuelCapacity * gameData.constants.fuel_weight_per_liter;
     const combatWeight = totalEmptyWeight + armamentWeight + (inputs.numCrewmen * gameData.constants.crew_weight_kg) + fuelWeight;
 
@@ -451,12 +524,12 @@ export function updateCalculations() {
 
     // --- CÁLCULOS DE PERFORMANCE ---
     const perfSL = calculatePerformanceAtAltitude(0, combatWeight, totalEnginePower, propData, aero, superchargerData);
-    const perfAlt = calculatePerformanceAtAltitude(superchargerData.rated_altitude_m, combatWeight, totalEnginePower, propData, aero, superchargerData);
+    const perfAlt = calculatePerformanceAtAltitude(superchargerData.characteristics.optimal_altitude || superchargerData.characteristics.altitude_limit, combatWeight, totalEnginePower, propData, aero, superchargerData);
 
     // Valores calculados brutos
     let rawSpeedKmhSL = perfSL.speed_kmh * aero.speed_mod;
     let rawSpeedKmhAlt = perfAlt.speed_kmh * aero.speed_mod;
-    const bsfc_kg_per_watt_s = (gameData.components.engines[inputs.engineType].bsfc_g_per_kwh / 1000) / 3.6e6;
+    const bsfc_kg_per_watt_s = (engineData.characteristics.bsfc_g_per_kwh / 1000) / 3.6e6; // Usar bsfc do novo engineData
     const optimal_CL = Math.sqrt(aero.cd_0 * Math.PI * aero.aspect_ratio * aero.oswald_efficiency);
     const optimal_CD = aero.cd_0 * 2; // Isso pode ser simplificado, geralmente CD_induced = CD_0 para max L/D
     const L_D_ratio = optimal_CD > 0 ? optimal_CL / optimal_CD : 10; // Evita divisão por zero
@@ -470,6 +543,11 @@ export function updateCalculations() {
     let finalSpeedKmhAlt = rawSpeedKmhAlt;
     // Aplica o fator de balanço ao alcance
     let finalRangeKm = rawRangeKm / gameData.constants.range_balance_factor;
+
+    // Limites de velocidade e alcance baseados nos sliders do Design Wizard
+    finalSpeedKmhAlt = Math.min(finalSpeedKmhAlt, inputs.targetSpeed);
+    finalSpeedKmhSL = Math.min(finalSpeedKmhSL, inputs.targetSpeed);
+    finalRangeKm = Math.min(finalRangeKm, inputs.targetRange);
 
     if (typeData.limits) {
         finalSpeedKmhAlt = Math.min(finalSpeedKmhAlt, typeData.limits.max_speed);
@@ -507,9 +585,12 @@ export function updateCalculations() {
     const calculatedPerformance = {
         inputs, adjustedUnitCost: finalUnitCost, baseMetalCost, combatWeight, totalEnginePower,
         finalSpeedKmhSL, finalSpeedKmhAlt, rate_of_climb_ms, finalServiceCeiling, finalRangeKm, turn_time_s,
-        finalReliability, offensiveArmamentTexts, defensiveArmamentTexts,
+        finalReliability, offensiveArmamentTexts, defensiveArmamentTexts, armamentLimitExceeded,
         countryData, wingLoading, typeData, rawSpeedKmhAlt, rawRangeKm, superchargerData, aero, propData,
-        countryCostReduction: countryCostReduction // Inclui a redução de custo do país aqui
+        countryCostReduction: countryCostReduction,
+        suggestedPropeller: suggestedPropeller, // Passa a hélice sugerida
+        suggestedCooling: suggestedCooling,     // Passa a refrigeração sugerida
+        suggestedFuelFeed: suggestedFuelFeed    // Passa a alimentação de combustível sugerida
     };
     updateUI(calculatedPerformance);
 
