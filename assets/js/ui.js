@@ -856,7 +856,7 @@ function selectSuperchargerType(superchargerKey) {
     } else {
         comboWarningEl.classList.add('hidden');
         document.getElementById('performance-sliders-step').classList.remove('opacity-50', 'pointer-events-none');
-        updatePerformanceSliders(comboLimits); // Atualiza os sliders com os limites da combinação
+        export updatePerformanceSliders(comboLimits); // Atualiza os sliders com os limites da combinação
     }
 
     updateCalculations(); // Recalcula
@@ -867,7 +867,7 @@ function selectSuperchargerType(superchargerKey) {
  * Atualiza os limites e valores dos sliders de performance.
  * @param {object} limits - Objeto com os limites de velocidade e alcance.
  */
-function updatePerformanceSliders(limits) {
+export function updatePerformanceSliders(limits) { // Adicionado 'export' aqui
     const speedSlider = document.getElementById('target-speed');
     const rangeSlider = document.getElementById('target-range');
 
