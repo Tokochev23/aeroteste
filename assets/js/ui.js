@@ -899,7 +899,7 @@ function updatePerformanceSliders(limits) {
 /**
  * Atualiza as consequências do design com base nos valores dos sliders.
  */
-function updateDesignConsequences() {
+export function updateDesignConsequences() { // Adicionado 'export' aqui
     const targetSpeed = parseInt(document.getElementById('target-speed').value);
     const targetRange = parseInt(document.getElementById('target-range').value);
 
