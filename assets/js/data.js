@@ -20,7 +20,7 @@ export const gameData = {
             heavy_fighter: { name: "Caça Pesado/Interceptor", cost: 75000, weight: 3500, metal_cost: 4000, crew: 2, wing_area_m2: 25, cl_max: 1.5, cd_0: 0.030, aspect_ratio: 6.5, oswald_efficiency: 0.78, reliability_base: 0.90, maneuverability_base: 0.9, limits: { min_speed: 480, max_speed: 720, min_range: 1000, max_range: 2500 }, description: "Armamento pesado e boa performance em altitude para interceptar bombardeiros. Menos ágil que caças leves." },
             cas: { name: "Apoio Aéreo Próximo (CAS)", cost: 65000, weight: 3000, metal_cost: 3200, crew: 1, wing_area_m2: 28, cl_max: 1.7, cd_0: 0.038, aspect_ratio: 5.8, oswald_efficiency: 0.75, reliability_base: 0.98, maneuverability_base: 0.95, limits: { min_speed: 350, max_speed: 550, min_range: 500, max_range: 1500 }, description: "Robusto e bem armado para atacar alvos terrestres. Geralmente mais lento e blindado." },
             tactical_bomber: { name: "Bombardeiro Tático", cost: 120000, weight: 5000, metal_cost: 6000, crew: 4, wing_area_m2: 50, cl_max: 1.4, cd_0: 0.033, aspect_ratio: 7.0, oswald_efficiency: 0.82, reliability_base: 0.92, maneuverability_base: 0.7, limits: { min_speed: 400, max_speed: 600, min_range: 1200, max_range: 3000 }, description: "Velocidade e alcance para atacar alvos táticos atrás das linhas inimigas. Carga de bombas moderada." },
-            strategic_bomber: { name: 250000, weight: 12000, metal_cost: 10000, crew: 7, wing_area_m2: 100, cl_max: 1.5, cd_0: 0.030, aspect_ratio: 8.5, oswald_efficiency: 0.85, reliability_base: 0.88, maneuverability_base: 0.5, limits: { min_speed: 380, max_speed: 580, min_range: 3000, max_range: 6000 }, description: "Longo alcance e grande capacidade de bombas para missões estratégicas profundas em território inimigo." },
+            strategic_bomber: { name: "Bombardeiro Estratégico", cost: 250000, weight: 12000, metal_cost: 10000, crew: 7, wing_area_m2: 100, cl_max: 1.5, cd_0: 0.030, aspect_ratio: 8.5, oswald_efficiency: 0.85, reliability_base: 0.88, maneuverability_base: 0.5, limits: { min_speed: 380, max_speed: 580, min_range: 3000, max_range: 6000 }, description: "Longo alcance e grande capacidade de bombas para missões estratégicas profundas em território inimigo." },
             zeppelin: { name: "Zeppelin", cost: 500000, weight: 50000, metal_cost: 15000, crew: 20, wing_area_m2: 500, cl_max: 0.8, cd_0: 0.020, aspect_ratio: 1.0, oswald_efficiency: 0.7, reliability_base: 0.90, maneuverability_base: 0.1, limits: { min_speed: 80, max_speed: 150, min_range: 5000, max_range: 15000 }, description: "Dirigível gigante para bombardeio ou reconhecimento. Lento e vulnerável, mas com alcance e carga imensos." },
             naval_fighter: { name: "Caça Naval", cost: 60000, weight: 2200, metal_cost: 2800, crew: 1, wing_area_m2: 22, cl_max: 1.65, cd_0: 0.028, aspect_ratio: 5.5, oswald_efficiency: 0.78, reliability_base: 0.93, maneuverability_base: 1.0, limits: { min_speed: 420, max_speed: 680, min_range: 800, max_range: 2200 }, description: "Caça adaptado para operações em porta-aviões, com estrutura reforçada e geralmente asas dobráveis." },
             naval_cas: { name: "CAS Naval", cost: 90000, weight: 4000, metal_cost: 4500, crew: 2, wing_area_m2: 35, cl_max: 1.75, cd_0: 0.040, aspect_ratio: 5.2, oswald_efficiency: 0.72, reliability_base: 0.96, maneuverability_base: 0.85, limits: { min_speed: 320, max_speed: 520, min_range: 700, max_range: 1800 }, description: "Aeronave de ataque naval, incluindo bombardeiros de mergulho e torpedeiros." },
@@ -181,11 +181,15 @@ export const gameData = {
                     drag_penalty: 1.15,
                     visibility_penalty: 0.85,
                     max_speed_modifier: 0.92,
-                    fuel_efficiency: 0.90
+                    fuel_efficiency: 0.90,
+                    bsfc_g_per_kwh: 310 // Specific fuel consumption
                 },
                 min_power: 200, max_power: 2200, // Range de potência para este tipo
                 tech_level_required: 30,
-                famous_examples: "Fw 190, P-47 Thunderbolt, Zero"
+                famous_examples: "Fw 190, P-47 Thunderbolt, Zero",
+                cost: 25000, // Base cost for this engine type
+                weight: 500, // Base weight
+                metal_cost: 2000 // Base metal cost
             },
             v_inline: {
                 name: "Motor em V / Em Linha",
@@ -200,11 +204,15 @@ export const gameData = {
                     reliability_penalty: 0.85,
                     maintenance_cost: 1.3,
                     vulnerability_to_damage: 1.4,
-                    cold_start_difficulty: 1.5
+                    cold_start_difficulty: 1.5,
+                    bsfc_g_per_kwh: 290
                 },
                 min_power: 300, max_power: 2000,
                 tech_level_required: 50,
-                famous_examples: "Spitfire, Bf 109, P-51 Mustang"
+                famous_examples: "Spitfire, Bf 109, P-51 Mustang",
+                cost: 35000,
+                weight: 600,
+                metal_cost: 2500
             },
             rotary: {
                 name: "Motor Rotativo",
@@ -219,12 +227,16 @@ export const gameData = {
                     max_speed_penalty: 0.75,
                     reliability_terrible: 0.50,
                     fuel_consumption_horror: 2.0,
-                    oil_consumption: "extreme"
+                    oil_consumption: "extreme",
+                    bsfc_g_per_kwh: 350
                 },
                 min_power: 80, max_power: 250,
                 tech_level_required: 0,
                 obsolete_after: 1925,
-                famous_examples: "Sopwith Camel, Fokker Dr.I"
+                famous_examples: "Sopwith Camel, Fokker Dr.I",
+                cost: 10000,
+                weight: 150,
+                metal_cost: 800
             },
             twin_row_radial: {
                 name: "Radial Dupla Estrela",
@@ -237,11 +249,15 @@ export const gameData = {
                     weight_penalty: 1.40,
                     drag_penalty: 1.25,
                     fuel_consumption: 1.35,
-                    complexity_penalty: 1.5
+                    complexity_penalty: 1.5,
+                    bsfc_g_per_kwh: 285
                 },
                 min_power: 1000, max_power: 3000,
                 tech_level_required: 60,
-                famous_examples: "B-29, Corsair, Sea Fury"
+                famous_examples: "B-29, Corsair, Sea Fury",
+                cost: 45000,
+                weight: 800,
+                metal_cost: 3500
             },
             x_configuration: {
                 name: "Motor em X (Experimental)",
@@ -253,11 +269,15 @@ export const gameData = {
                     reliability_nightmare: 0.40,
                     maintenance_cost: 3.0,
                     production_cost: 2.5,
-                    spare_parts_rare: true
+                    spare_parts_rare: true,
+                    bsfc_g_per_kwh: 280
                 },
                 min_power: 1500, max_power: 2500,
                 tech_level_required: 80,
-                famous_examples: "Rolls-Royce Vulture (falhou)"
+                famous_examples: "Rolls-Royce Vulture (falhou)",
+                cost: 80000,
+                weight: 1200,
+                metal_cost: 6000
             }
         },
         propellers: {
@@ -290,7 +310,8 @@ export const gameData = {
                     fuel_efficiency: 1.1
                 },
                 tech_level_required: 0,
-                best_for: "Aviões de baixa altitude, treino, economia"
+                best_for: "Aviões de baixa altitude, treino, economia",
+                cost: 0, weight: 0, metal_cost: 0
             },
             single_stage_single_speed: {
                 name: "Supercharger 1 Estágio/1 Velocidade",
@@ -306,7 +327,8 @@ export const gameData = {
                     fuel_efficiency: 0.95
                 },
                 tech_level_required: 40,
-                best_for: "Caças padrão, altitude média"
+                best_for: "Caças padrão, altitude média",
+                cost: 8000, weight: 50, metal_cost: 100
             },
             single_stage_two_speed: {
                 name: "Supercharger 1 Estágio/2 Velocidades",
@@ -323,7 +345,8 @@ export const gameData = {
                     fuel_efficiency: 0.92
                 },
                 tech_level_required: 60,
-                best_for: "Caças versáteis, patrulha em várias altitudes"
+                best_for: "Caças versáteis, patrulha em várias altitudes",
+                cost: 15000, weight: 70, metal_cost: 200
             },
             two_stage_two_speed: {
                 name: "Supercharger 2 Estágios/2 Velocidades",
@@ -341,7 +364,8 @@ export const gameData = {
                     requires_intercooler: true
                 },
                 tech_level_required: 70,
-                best_for: "Interceptadores de alta altitude, escoltas de bombardeiros"
+                best_for: "Interceptadores de alta altitude, escoltas de bombardeiros",
+                cost: 20000, weight: 90, metal_cost: 300
             },
             turbocharger: {
                 name: "Turbocompressor",
@@ -359,7 +383,8 @@ export const gameData = {
                     requires_wastegate: true
                 },
                 tech_level_required: 80,
-                best_for: "Bombardeiros de alta altitude, recordes de velocidade"
+                best_for: "Bombardeiros de alta altitude, recordes de velocidade",
+                cost: 30000, weight: 150, metal_cost: 500
             },
             mechanically_coupled_turbo: {
                 name: "Turbo-Compound",
@@ -376,7 +401,8 @@ export const gameData = {
                     vibration_issues: true
                 },
                 tech_level_required: 85,
-                best_for: "Aviões de longo alcance, quando economia importa mais que simplicidade"
+                best_for: "Aviões de longo alcance, quando economia importa mais que simplicidade",
+                cost: 40000, weight: 200, metal_cost: 700
             },
             water_methanol_injection: {
                 name: "Injeção de Água-Metanol + Supercharger",
@@ -394,7 +420,8 @@ export const gameData = {
                     engine_wear: "high"
                 },
                 tech_level_required: 75,
-                best_for: "Caças que precisam de boost em dogfights, interceptação de emergência"
+                best_for: "Caças que precisam de boost em dogfights, interceptação de emergência",
+                cost: 25000, weight: 80, metal_cost: 300
             },
             nitrous_oxide: {
                 name: "Sistema de Óxido Nitroso (GM-1)",
@@ -413,8 +440,13 @@ export const gameData = {
                 },
                 tech_level_required: 85,
                 nation_specific: ["Alemanha", "Japão"],
-                best_for: "Interceptadores de alta altitude desesperados"
+                best_for: "Interceptadores de alta altitude desesperados",
+                cost: 35000, weight: 100, metal_cost: 400
             }
+        },
+        engine_enhancements: {
+            ducted_radiators: { name: "Radiadores Dutados", cost: 10000, weight: 30, metal_cost: 80, drag_mod: 0.97, reliability_mod: 0.98, tech_level_required: 60, description: "Radiadores integrados na fuselagem ou asas, reduzindo significativamente o arrasto em comparação com radiadores externos. Aumenta a complexidade." },
+            intercoolers: { name: "Intercoolers", cost: 8000, weight: 25, metal_cost: 70, power_mod: 1.03, reliability_mod: 0.95, tech_level_required: 50, description: "Resfria o ar comprimido pelo superalimentador, aumentando a densidade do ar e a potência do motor, mas adiciona complexidade e pontos de falha." }
         },
         armaments: {
             mg_30: { name: "Metralhadora .30", cost: 4500, weight: 12, metal_cost: 100, tech_level_required: 0 },
@@ -439,7 +471,7 @@ export const gameData = {
             remote_turret: { name: "Torreta Remota", cost: 100000, weight: 250, metal_cost: 800, reliability_mod: 0.70, defensive_firepower_mod: 1.5, tech_level_required: 80, description: "Torreta controlada remotamente de dentro da aeronave, protegendo o artilheiro e oferecendo excelente campo de fogo. Extremamente avançada e não confiável no período." },
             defensive_mg_30: { name: "Metralhadora .30 (Defensiva)", cost: 4500, weight: 12, metal_cost: 100, firepower: 1, tech_level_required: 0 },
             defensive_mg_50: { name: "Metralhadora .50 (Defensiva)", cost: 11250, weight: 20, metal_cost: 250, firepower: 2, tech_level_required: 40 },
-            defensive_cannon_20: { name: "Canhão 20mm (Defensivo)", cost: 15000, weight: 100, metal_cost: 400, firepower: 5, tech_level_required: 50 },
+            defensive_cannon_20: { name: "Canhão 20mm (Defensiva)", cost: 15000, weight: 100, metal_cost: 400, firepower: 5, tech_level_required: 50 },
         },
         protection: {
             pilot_armor: { name: "Blindagem do Piloto", cost: 15000, weight: 250, metal_cost: 400, reliability_mod: 1.0, tech_level_required: 30, description: "Proteção para o piloto contra fogo inimigo." },
