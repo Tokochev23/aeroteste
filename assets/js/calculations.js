@@ -274,8 +274,16 @@ export function updateCalculations() {
     const doctrineData = gameData.doctrines[inputs.selectedAirDoctrine];
 
     // Obter dados do motor e supercharger selecionados globalmente
+    // Adicionado verificação para garantir que selectedEngineType e selectedSuperchargerType não são nulos
+    // antes de tentar acessá-los. Se forem nulos, a UI será limpa.
+    if (!selectedEngineType || !selectedSuperchargerType) {
+        updateUI(null);
+        updateProgress();
+        return null;
+    }
     const engineData = gameData.components.engineTypes[selectedEngineType];
     const superchargerData = gameData.components.superchargerTypes[selectedSuperchargerType];
+
 
     // Validação inicial para componentes essenciais
     if (!typeData || !structureData || !wingData || !wingPositionData || !wingShapeData || !landingGearData || !engineData || !superchargerData || inputs.targetSpeed <= 0 || inputs.targetRange <= 0) {
