@@ -4,7 +4,7 @@ import { gameData, techLevelRestrictions, engineSuperchargerCombos, performanceT
 import { updateUI, updateProgress, updateStatusAndWarnings } from './ui.js';
 import { stateManager, autoSaveManager } from './managers.js';
 
-// Importação segura das variáveis de seleção
+// Variáveis de seleção - serão atualizadas pela UI
 let selectedEngineType = null;
 let selectedSuperchargerType = null;
 
@@ -16,19 +16,13 @@ export function updateEngineSelections(engineType, superchargerType) {
 
 // Função para obter as seleções atuais (acesso seguro)
 export function getCurrentSelections() {
-    // Tenta importar dinamicamente se não estiverem definidas
-    if (!selectedEngineType || !selectedSuperchargerType) {
-        try {
-            const uiModule = await import('./ui.js');
-            selectedEngineType = uiModule.selectedEngineType;
-            selectedSuperchargerType = uiModule.selectedSuperchargerType;
-        } catch (error) {
-            // Se não conseguir importar, mantém os valores null
-            console.warn('Não foi possível importar seleções da UI:', error);
-        }
-    }
-    
     return { selectedEngineType, selectedSuperchargerType };
+}
+
+// Função para definir as seleções externamente (para uso pelo UI)
+export function setCurrentSelections(engineType, superchargerType) {
+    selectedEngineType = engineType;
+    selectedSuperchargerType = superchargerType;
 }
 
 // --- FUNÇÕES DE CÁLCULO AERODINÂMICO E DE PERFORMANCE ---
@@ -281,7 +275,7 @@ export function updateCalculations() {
             numCrewmen: parseInt(document.getElementById('num_crewmen')?.value) || 1,
             productionQualitySliderValue: parseInt(document.getElementById('production_quality_slider')?.value) || 50,
             defensiveTurretType: document.getElementById('defensive_turret_type')?.value,
-            // Acesso seguro às seleções de motor e supercharger
+            // Acesso direto às seleções locais
             selectedEngineType: selectedEngineType,
             selectedSuperchargerType: selectedSuperchargerType,
             checkboxes: {
