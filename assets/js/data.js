@@ -40,7 +40,6 @@ export const gameData = {
             monoplane_cantilever: { name: "Monoplano Cantilever", cost_mod: 1.2, weight_mod: 1.0, drag_mod: 0.9, cl_max_mod: 1.0, cd_0_mod: 0.9, aspect_ratio_mod: 1.0, reliability_mod: 1.0, tech_level_required: 40, description: "Design limpo, menor arrasto, mas estrutura inicialmente mais pesada. Padrão para aeronaves modernas." },
             delta_wing: { name: "Asa Delta (Experimental)", cost_mod: 1.8, weight_mod: 1.05, drag_mod: 0.8, cl_max_mod: 0.9, cd_0_mod: 0.85, aspect_ratio_mod: 0.5, speed_mod: 1.1, maneuverability_mod: 0.8, reliability_mod: 0.85, tech_level_required: 90, description: "Alto desempenho em velocidade, bom para curvas de alta G em alta velocidade, mas péssimo manuseio em baixa velocidade. Tecnologia muito experimental para o período." }
         },
-        // CORREÇÃO: Links das imagens atualizados para os URLs diretos dos arquivos SVG.
         wing_positions: {
             low_wing: {
                 name: "Asa Baixa",
@@ -160,13 +159,19 @@ export const gameData = {
                 tech_level_required: 60
             }
         },
+        // CORREÇÃO: Adicionada a seção 'wing_features' que estava faltando.
+        wing_features: {
+            flaps: { name: "Flaps", cost: 5000, weight: 40, metal_cost: 50, reliability_mod: 0.98, cl_max_mod: 1.15, drag_mod: 1.02, tech_level_required: 40, description: "Aumentam a sustentação em baixas velocidades para pousos e decolagens mais curtos." },
+            slats: { name: "Slats", cost: 8000, weight: 30, metal_cost: 60, reliability_mod: 0.97, cl_max_mod: 1.1, maneuverability_mod: 1.05, tech_level_required: 60, description: "Melhoram o controle em ângulos de ataque elevados, prevenindo estol." },
+            folding_wings: { name: "Asas Dobráveis (Naval)", cost: 12000, weight: 150, metal_cost: 100, reliability_mod: 0.95, tech_level_required: 30, description: "Permitem que a aeronave ocupe menos espaço em porta-aviões." },
+            swept_wings: { name: "Asas Enflechadas (Exp.)", cost: 30000, weight: 80, metal_cost: 200, reliability_mod: 0.9, speed_mod: 1.1, maneuverability_mod: 0.9, tech_level_required: 90, description: "Design experimental para voo em alta velocidade, reduz o arrasto transônico." }
+        },
         landing_gear_types: {
             fixed_gear: { name: "Fixo", cost: 0, weight: 0, drag_mod: 1.1, reliability_mod: 1.0, tech_level_required: 0, description: "Simples, leve e robusto, mas gera arrasto constante." },
             retractable_gear: { name: "Retrátil", cost: 22500, weight: 150, metal_cost: 300, drag_mod: 1.0, reliability_mod: 0.97, tech_level_required: 50, description: "Trem de pouso que se retrai para dentro da fuselagem, reduzindo o arrasto em voo. Mais complexo e pesado." },
             skis: { name: "Esquis", cost: 5000, weight: 80, metal_cost: 100, drag_mod: 1.12, reliability_mod: 1.0, tech_level_required: 0, description: "Permite operações em superfícies nevadas ou geladas. Aumenta o arrasto." },
             floats: { name: "Flutuadores", cost: 15000, weight: 300, metal_cost: 200, drag_mod: 1.20, reliability_mod: 1.0, tech_level_required: 0, description: "Permite pousos e decolagens na água. Aumenta significativamente o peso e o arrasto." }
         },
-        // CORREÇÃO: Removidas as outras opções de motor, deixando apenas Radial e V/Em Linha.
         engineTypes: {
             radial: {
                 name: "Motor Radial",
@@ -212,74 +217,7 @@ export const gameData = {
                 cost: 35000,
                 weight: 600,
                 metal_cost: 2500
-            },
-            /*
-            rotary: {
-                name: "Motor Rotativo",
-                description: "Motor inteiro gira com a hélice. Tecnologia da WWI, leve mas problemático. Melhor para aviões de treino baratos, países sem tecnologia, nostalgia.",
-                characteristics: {
-                    weight_reduction: 0.60,
-                    turn_rate_bonus: 1.25,
-                    cooling_natural: true,
-                    cost_reduction: 0.5,
-                    max_power_limit: 250,
-                    gyroscopic_effect: 2.0,
-                    max_speed_penalty: 0.75,
-                    reliability_terrible: 0.50,
-                    fuel_consumption_horror: 2.0,
-                    oil_consumption: "extreme",
-                    bsfc_g_per_kwh: 350
-                },
-                min_power: 80, max_power: 250,
-                tech_level_required: 0,
-                obsolete_after: 1925,
-                famous_examples: "Sopwith Camel, Fokker Dr.I",
-                cost: 10000,
-                weight: 150,
-                metal_cost: 800
-            },
-            twin_row_radial: {
-                name: "Radial Dupla Estrela",
-                description: "Duas fileiras de cilindros radiais. Máxima potência bruta. Melhor para bombardeiros, caças pesados, aviões que precisam de MUITA potência.",
-                characteristics: {
-                    raw_power_bonus: 1.30,
-                    acceleration_bonus: 1.20,
-                    climb_rate_bonus: 1.25,
-                    intimidation_factor: 1.5,
-                    weight_penalty: 1.40,
-                    drag_penalty: 1.25,
-                    fuel_consumption: 1.35,
-                    complexity_penalty: 1.5,
-                    bsfc_g_per_kwh: 285
-                },
-                min_power: 1000, max_power: 3000,
-                tech_level_required: 60,
-                famous_examples: "B-29, Corsair, Sea Fury",
-                cost: 45000,
-                weight: 800,
-                metal_cost: 3500
-            },
-            x_configuration: {
-                name: "Motor em X (Experimental)",
-                description: "Configuração em X, compacto mas complexo. Tecnologia experimental. Melhor para protótipos, países ricos querendo inovar, apostas arriscadas.",
-                characteristics: {
-                    power_density: 1.35,
-                    frontal_area_tiny: 0.75,
-                    unique_sound: true,
-                    reliability_nightmare: 0.40,
-                    maintenance_cost: 3.0,
-                    production_cost: 2.5,
-                    spare_parts_rare: true,
-                    bsfc_g_per_kwh: 280
-                },
-                min_power: 1500, max_power: 2500,
-                tech_level_required: 80,
-                famous_examples: "Rolls-Royce Vulture (falhou)",
-                cost: 80000,
-                weight: 1200,
-                metal_cost: 6000
             }
-            */
         },
         propellers: {
             wood_2: { name: "Madeira 2 pás", cost: 1000, weight: 30, metal_cost: 20, efficiency: 0.75, reliability_mod: 1.05, tech_level_required: 0, description: "Simples e leve. Ineficiente em altas velocidades e altitudes." },
