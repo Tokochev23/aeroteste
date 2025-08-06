@@ -156,6 +156,8 @@ export function updateUI(performance) {
     updateStatusAndWarnings(performance);
 
     // Adiciona a lógica para preencher as listas de equipamentos no resumo da página principal
+    // CORREÇÃO: O erro ocorria aqui porque gameData.components.wing_features não existia.
+    // A correção principal está em data.js, onde este objeto foi adicionado.
     populateEquipmentListInUI('summary_wing_features', inputs.checkboxes.wing_features.map(id => gameData.components.wing_features[id]?.name));
     populateEquipmentListInUI('summary_engine_enhancements', inputs.checkboxes.engine_enhancements.map(id => gameData.components.engine_enhancements[id]?.name));
     populateEquipmentListInUI('summary_protection', inputs.checkboxes.protection.map(id => gameData.components.protection[id]?.name));
