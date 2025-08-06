@@ -501,11 +501,26 @@ function updateWingPositionInfo() {
 
     if (selectedKey && gameData.components.wing_positions[selectedKey]) {
         const data = gameData.components.wing_positions[selectedKey];
-        img.src = data.svg_url;
+        
+        // Atualiza a imagem com melhor tratamento de erro
+        img.src = data.svg_url || 'https://via.placeholder.com/80x80/e5e7eb/9ca3af?text=Asa';
+        img.alt = `Ilustração: ${data.name}`;
+        img.className = 'wing-illustration';
+        
+        // Atualiza a descrição
         desc.textContent = data.description;
+        
+        // Mostra o card com animação
         infoDiv.classList.remove('hidden');
+        infoDiv.classList.add('fade-in', 'wing-info-card');
+        
+        // Adiciona evento de erro para fallback da imagem
+        img.onerror = function() {
+            this.src = 'https://via.placeholder.com/80x80/e5e7eb/9ca3af?text=' + encodeURIComponent(data.name);
+        };
     } else {
         infoDiv.classList.add('hidden');
+        infoDiv.classList.remove('fade-in', 'wing-info-card');
         img.src = '';
         desc.textContent = '';
     }
@@ -524,11 +539,26 @@ function updateWingShapeInfo() {
 
     if (selectedKey && gameData.components.wing_shapes[selectedKey]) {
         const data = gameData.components.wing_shapes[selectedKey];
-        img.src = data.svg_url;
+        
+        // Atualiza a imagem com melhor tratamento de erro
+        img.src = data.svg_url || 'https://via.placeholder.com/80x80/e5e7eb/9ca3af?text=Asa';
+        img.alt = `Ilustração: ${data.name}`;
+        img.className = 'wing-illustration';
+        
+        // Atualiza a descrição
         desc.textContent = data.description;
+        
+        // Mostra o card com animação
         infoDiv.classList.remove('hidden');
+        infoDiv.classList.add('fade-in', 'wing-info-card');
+        
+        // Adiciona evento de erro para fallback da imagem
+        img.onerror = function() {
+            this.src = 'https://via.placeholder.com/80x80/e5e7eb/9ca3af?text=' + encodeURIComponent(data.name);
+        };
     } else {
         infoDiv.classList.add('hidden');
+        infoDiv.classList.remove('fade-in', 'wing-info-card');
         img.src = '';
         desc.textContent = '';
     }
