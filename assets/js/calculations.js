@@ -301,31 +301,22 @@ export function updateCalculations() {
         const wingShapeData = gameData.components.wing_shapes?.[inputs.wingShape];
         const landingGearData = gameData.components.landing_gear_types?.[inputs.landingGearType];
         const doctrineData = gameData.doctrines?.[inputs.selectedAirDoctrine];
-
-        // Verificação segura das seleções de motor e supercharger
-        if (!selectedEngineType || !selectedSuperchargerType) {
-            console.log('Tipo de motor ou supercharger não selecionado, limpando UI...');
-            updateUI(null);
-            updateProgress();
-            return null;
-        }
-
         const engineData = gameData.components.engineTypes?.[selectedEngineType];
         const superchargerData = gameData.components.superchargerTypes?.[selectedSuperchargerType];
 
-        // Validação inicial para componentes essenciais
-        if (!typeData || !structureData || !wingData || !engineData || !superchargerData) {
-            console.log('Dados essenciais faltando, limpando UI...');
+        // CORREÇÃO: Lógica de validação ajustada.
+        // A UI só é reiniciada se os dados mais básicos não estiverem presentes.
+        if (!typeData || !structureData || !wingData) {
             updateUI(null);
             updateProgress();
             return null;
         }
 
-        // Se chegou até aqui mas targetSpeed ou targetRange são 0, também limpa
-        if (inputs.targetSpeed <= 0 || inputs.targetRange <= 0) {
-            console.log('Velocidade ou alcance alvo não definidos, limpando UI...');
-            updateUI(null);
-            updateProgress();
+        // Se o motor, sobrealimentador ou sliders não estiverem definidos,
+        // não calcula a performance, mas também não limpa a UI, permitindo que o usuário continue.
+        if (!engineData || !superchargerData || inputs.targetSpeed <= 0 || inputs.targetRange <= 0) {
+            console.log('Aguardando seleção completa de motor/performance para calcular.');
+            // Não chama updateUI(null) para não reiniciar a interface.
             return null;
         }
 
@@ -436,9 +427,7 @@ export function updateCalculations() {
 
         // Aplica modificadores de motor
         if (engineData.characteristics) {
-            aero.drag_mod *= (engineData.characteristics.frontal_area_tiny || 1.0) * 
-                            (engineData.characteristics.drag_penalty || 1.0) * 
-                            (engineData.characteristics.drag_reduction || 1.0);
+            aero.drag_mod *= (engineData.characteristics.frontal_area_tiny || 1.0) * (engineData.characteristics.drag_penalty || 1.0) * (engineData.characteristics.drag_reduction || 1.0);
         }
 
         // Custos e pesos de motor e propulsão
