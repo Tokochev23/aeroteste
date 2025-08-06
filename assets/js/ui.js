@@ -1,12 +1,11 @@
 // assets/js/ui.js
 
 import { gameData, realWorldAircraft, techLevelRestrictions, engineSuperchargerCombos, designPointsSystem, designPenalties } from './data.js'; // Importa gameData e realWorldAircraft
-import { updateCalculations, calculatePerformanceAtAltitude, calculateRateOfClimb } from './calculations.js'; // Importa updateCalculations e funções de cálculo
+import { updateCalculations, calculatePerformanceAtAltitude, calculateRateOfClimb, setCurrentSelections } from './calculations.js'; // Importa updateCalculations e funções de cálculo
 import { templateManager, stateManager } from './managers.js'; // Importa managers
 
 let currentStep = 1;
-export let selectedEngineType = null; // Exportar para ser acessível em calculations.js
-export let selectedSuperchargerType = null; // Exportar para ser acessível em calculations.js
+// REMOVIDO: selectedEngineType e selectedSuperchargerType - agora são gerenciados em calculations.js
 
 // Função auxiliar para preencher as listas de equipamentos
 function populateEquipmentListInUI(elementId, items) {
@@ -52,7 +51,7 @@ export function updateUI(performance) {
                 else if (id === 'main_armament') el.textContent = 'Desarmado';
                 else if (['suggested_propeller', 'suggested_cooling', 'suggested_fuel_feed'].includes(id)) el.textContent = '---';
                 else if (['speed-value', 'range-value', 'max-altitude', 'speed-min', 'speed-max', 'range-min', 'range-max'].includes(id)) el.textContent = '---';
-                else if (['engine_type_display', 'supercharger_type_display'].includes(id)) el.textContent = '-'; // Corrigido para mostrar '-' em vez de '---'
+                else if (['engine_type_display', 'supercharger_type_display'].includes(id)) el.textContent = '-';
                 else el.textContent = '0';
             }
         });
@@ -84,7 +83,6 @@ export function updateUI(performance) {
         const engineEnhancementsContainer = document.querySelector('#engine_enhancements_checkboxes .grid');
         if (engineEnhancementsContainer) engineEnhancementsContainer.innerHTML = '';
 
-
         return;
     }
     const { inputs, adjustedUnitCost, baseMetalCost, combatWeight, totalEnginePower, finalSpeedKmhSL, finalSpeedKmhAlt, rate_of_climb_ms, finalServiceCeiling, finalRangeKm, turn_time_s, finalReliability, offensiveArmamentTexts, defensiveArmamentTexts, countryData, typeData, countryCostReduction, suggestedPropeller, suggestedCooling, suggestedFuelFeed } = performance;
@@ -115,8 +113,8 @@ export function updateUI(performance) {
         'speed-value': `${inputs.targetSpeed} km/h`,
         'range-value': `${inputs.targetRange} km`,
         'max-altitude': `${Math.round(finalServiceCeiling).toLocaleString('pt-BR')} metros`,
-        'engine_type_display': gameData.components.engineTypes[inputs.selectedEngineType]?.name || '-', // Display no resumo
-        'supercharger_type_display': gameData.components.superchargerTypes[inputs.selectedSuperchargerType]?.name || '-' // Display no resumo
+        'engine_type_display': gameData.components.engineTypes[inputs.selectedEngineType]?.name || '-',
+        'supercharger_type_display': gameData.components.superchargerTypes[inputs.selectedSuperchargerType]?.name || '-'
     };
     Object.entries(formattedElements).forEach(([id, value]) => {
         const el = document.getElementById(id);
@@ -164,7 +162,7 @@ export function updateUI(performance) {
     populateEquipmentListInUI('summary_cockpit_comfort', inputs.checkboxes.cockpit_comfort.map(id => gameData.components.cockpit_comfort[id]?.name));
     populateEquipmentListInUI('summary_advanced_avionics', inputs.checkboxes.advanced_avionics.map(id => gameData.components.advanced_avionics[id]?.name));
     populateEquipmentListInUI('summary_equipment', inputs.checkboxes.equipment.map(id => gameData.components.equipment[id]?.name));
-    populateEquipmentListInUI('summary_maintainability_features', inputs.checkboxes.maintainability_features.map(id => gameData.components.maintainability_features[id]?.name)); // Adicionado
+    populateEquipmentListInUI('summary_maintainability_features', inputs.checkboxes.maintainability_features.map(id => gameData.components.maintainability_features[id]?.name));
 
     // Atualiza o display de armamento limitado
     const armamentLimitsNote = document.getElementById('armament_limits_note');
@@ -215,8 +213,11 @@ export function toggleStep(step) {
 /**
  * Atualiza a barra de progresso com base nos campos obrigatórios preenchidos.
  */
-export function updateProgress() {
-    // Adicionado 'wing_position' e 'wing_shape' aos campos obrigatórios
+export async function updateProgress() {
+    // Obtém as seleções atuais de motor/supercharger do calculations.js
+    const { getCurrentSelections } = await import('./calculations.js');
+    const { selectedEngineType, selectedSuperchargerType } = getCurrentSelections();
+    
     const requiredFields = ['aircraft_name', 'country_doctrine', 'air_doctrine', 'aircraft_type', 'wing_position', 'wing_shape'];
     let completedFields = 0;
     requiredFields.forEach(id => {
@@ -648,8 +649,7 @@ export function applyTechLevelRestrictions(techLevel) {
     // Lógica para os novos tipos de motor (Passo 3)
     populateEngineTypeSelection();
     // Limpa a seleção atual de motor/supercharger se o nível de tecnologia mudou
-    selectedEngineType = null;
-    selectedSuperchargerType = null;
+    setCurrentSelections(null, null);
     document.getElementById('engine-selected-info').classList.add('hidden');
     document.getElementById('supercharger-step').classList.add('opacity-50', 'pointer-events-none');
     document.getElementById('supercharger-selected-info').classList.add('hidden');
@@ -687,7 +687,7 @@ export function populateEngineTypeSelection() {
 
         const button = document.createElement('button');
         button.type = 'button';
-        button.className = `engine-choice-btn p-3 border rounded-lg hover:bg-blue-50 transition-colors text-left ${selectedEngineType === key ? 'bg-blue-100 border-blue-500' : 'bg-white border-gray-300'}`;
+        button.className = `engine-choice-btn p-3 border rounded-lg hover:bg-blue-50 transition-colors text-left bg-white border-gray-300`;
         button.dataset.engine = key;
         button.innerHTML = `
             <div class="font-bold text-gray-800">${engine.name}</div>
@@ -711,8 +711,20 @@ export function populateEngineTypeSelection() {
  * @param {string} engineKey - A chave do tipo de motor selecionado.
  */
 function selectEngineType(engineKey) {
-    selectedEngineType = engineKey;
+    // Atualiza a seleção no calculations.js
+    setCurrentSelections(engineKey, null);
     const engine = gameData.components.engineTypes[engineKey];
+
+    // Atualiza visualmente os botões
+    document.querySelectorAll('.engine-choice-btn').forEach(btn => {
+        btn.classList.remove('bg-blue-100', 'border-blue-500');
+        btn.classList.add('bg-white', 'border-gray-300');
+    });
+    const selectedButton = document.querySelector(`[data-engine="${engineKey}"]`);
+    if (selectedButton) {
+        selectedButton.classList.remove('bg-white', 'border-gray-300');
+        selectedButton.classList.add('bg-blue-100', 'border-blue-500');
+    }
 
     // Atualiza o display de informações do motor
     document.getElementById('selected_engine_name').textContent = engine.name;
@@ -752,7 +764,7 @@ function selectEngineType(engineKey) {
     populateSuperchargerSelection(); // Popula as opções de supercharger
     
     // Resetar supercharger selecionado ao mudar o motor
-    selectedSuperchargerType = null;
+    setCurrentSelections(engineKey, null);
     document.getElementById('supercharger-selected-info').classList.add('hidden');
     document.getElementById('combo-warning').classList.add('hidden');
     document.getElementById('performance-sliders-step').classList.add('opacity-50', 'pointer-events-none');
@@ -766,13 +778,17 @@ function selectEngineType(engineKey) {
 /**
  * Popula a seleção de tipos de sobrealimentador no Passo 3.
  */
-export function populateSuperchargerSelection() {
+export async function populateSuperchargerSelection() {
     const superchargerSelectionDiv = document.getElementById('supercharger-selection');
     if (!superchargerSelectionDiv) return;
 
     superchargerSelectionDiv.innerHTML = '';
     const currentTechLevel = gameData.currentCountryTechLevel || 0;
     const countryName = document.getElementById('country_doctrine')?.value;
+    
+    // Obtém as seleções atuais corretamente
+    const { getCurrentSelections } = await import('./calculations.js');
+    const { selectedEngineType } = getCurrentSelections();
 
     Object.entries(gameData.components.superchargerTypes).forEach(([key, supercharger]) => {
         const isDisabled = supercharger.tech_level_required && currentTechLevel < supercharger.tech_level_required;
@@ -788,7 +804,7 @@ export function populateSuperchargerSelection() {
 
         const button = document.createElement('button');
         button.type = 'button';
-        button.className = `supercharger-choice-btn p-3 border rounded-lg hover:bg-blue-50 transition-colors text-left ${selectedSuperchargerType === key ? 'bg-blue-100 border-blue-500' : 'bg-white border-gray-300'} ${isBlockedByCombo ? 'opacity-50 cursor-not-allowed' : ''}`;
+        button.className = `supercharger-choice-btn p-3 border rounded-lg hover:bg-blue-50 transition-colors text-left bg-white border-gray-300 ${isBlockedByCombo ? 'opacity-50 cursor-not-allowed' : ''}`;
         button.dataset.supercharger = key;
         button.disabled = isBlockedByCombo; // Desabilita se a combinação for bloqueada
         button.innerHTML = `
@@ -811,9 +827,25 @@ export function populateSuperchargerSelection() {
  * Seleciona um tipo de sobrealimentador e atualiza a UI.
  * @param {string} superchargerKey - A chave do tipo de sobrealimentador selecionado.
  */
-function selectSuperchargerType(superchargerKey) {
-    selectedSuperchargerType = superchargerKey;
+async function selectSuperchargerType(superchargerKey) {
+    // Obtém o motor selecionado atual
+    const { getCurrentSelections } = await import('./calculations.js');
+    const { selectedEngineType } = getCurrentSelections();
+    
+    // Atualiza a seleção no calculations.js
+    setCurrentSelections(selectedEngineType, superchargerKey);
     const supercharger = gameData.components.superchargerTypes[superchargerKey];
+
+    // Atualiza visualmente os botões
+    document.querySelectorAll('.supercharger-choice-btn').forEach(btn => {
+        btn.classList.remove('bg-blue-100', 'border-blue-500');
+        btn.classList.add('bg-white', 'border-gray-300');
+    });
+    const selectedButton = document.querySelector(`[data-supercharger="${superchargerKey}"]`);
+    if (selectedButton) {
+        selectedButton.classList.remove('bg-white', 'border-gray-300');
+        selectedButton.classList.add('bg-blue-100', 'border-blue-500');
+    }
 
     // Atualiza o display de informações do supercharger
     document.getElementById('selected_supercharger_name').textContent = supercharger.name;
@@ -849,7 +881,7 @@ function selectSuperchargerType(superchargerKey) {
     document.getElementById('supercharger-selected-info').classList.remove('hidden');
 
     // Verifica a combinação motor-supercharger
-    const comboLimits = engineSuperchargerCombos.calculateLimits(selectedEngineType, selectedSuperchargerType);
+    const comboLimits = engineSuperchargerCombos.calculateLimits(selectedEngineType, superchargerKey);
     const comboWarningEl = document.getElementById('combo-warning');
     if (comboLimits.special?.blocked) {
         comboWarningEl.textContent = `🚫 ${comboLimits.special.reason}`;
@@ -871,7 +903,7 @@ function selectSuperchargerType(superchargerKey) {
  * Atualiza os limites e valores dos sliders de performance.
  * @param {object} limits - Objeto com os limites de velocidade e alcance.
  */
-export function updatePerformanceSliders(limits) { // Adicionado 'export' aqui
+export function updatePerformanceSliders(limits) {
     const speedSlider = document.getElementById('target-speed');
     const rangeSlider = document.getElementById('target-range');
 
@@ -903,7 +935,7 @@ export function updatePerformanceSliders(limits) { // Adicionado 'export' aqui
 /**
  * Atualiza as consequências do design com base nos valores dos sliders.
  */
-export function updateDesignConsequences() { // Adicionado 'export' aqui
+export function updateDesignConsequences() {
     const targetSpeed = parseInt(document.getElementById('target-speed').value);
     const targetRange = parseInt(document.getElementById('target-range').value);
 
@@ -1099,8 +1131,7 @@ export function populateTechRestrictedFields(techLevel) { // Parâmetro techLeve
     // Lógica para os novos tipos de motor (Passo 3)
     populateEngineTypeSelection();
     // Limpa a seleção atual de motor/supercharger se o nível de tecnologia mudou
-    selectedEngineType = null;
-    selectedSuperchargerType = null;
+    setCurrentSelections(null, null);
     document.getElementById('engine-selected-info').classList.add('hidden');
     document.getElementById('supercharger-step').classList.add('opacity-50', 'pointer-events-none');
     document.getElementById('supercharger-selected-info').classList.add('hidden');
