@@ -97,50 +97,38 @@
                             <i class="fas fa-chevron-down transform transition-transform" id="step_2_icon"></i>
                         </div>
                     </div>
-                    <div class="p-6 space-y-4 hidden" id="step_2_content">
+                    <div class="p-6 space-y-6 hidden" id="step_2_content">
+                        <!-- Tipo de Aeronave (Botões) -->
+                        <div class="space-y-2">
+                            <label class="block text-md font-semibold text-gray-800">Tipo de Aeronave</label>
+                            <div id="aircraft_type_selection" class="grid grid-cols-2 md:grid-cols-3 gap-3">
+                                <!-- Botões serão populados aqui via JS -->
+                            </div>
+                            <select id="aircraft_type" class="hidden">
+                                <!-- Opções para manter a lógica de cálculo -->
+                            </select>
+                        </div>
+
+                        <!-- Material da Estrutura (Botões) -->
+                        <div class="space-y-2">
+                            <label class="block text-md font-semibold text-gray-800">Material da Estrutura</label>
+                            <div id="structure_type_selection" class="grid grid-cols-2 md:grid-cols-2 gap-3">
+                                <!-- Botões serão populados aqui via JS -->
+                            </div>
+                            <select id="structure_type" class="hidden"></select>
+                        </div>
+
+                        <!-- Tipo de Asa (Botões) -->
+                        <div class="space-y-2">
+                            <label class="block text-md font-semibold text-gray-800">Tipo de Asa</label>
+                            <div id="wing_type_selection" class="grid grid-cols-2 md:grid-cols-3 gap-3">
+                                <!-- Botões serão populados aqui via JS -->
+                            </div>
+                            <select id="wing_type" class="hidden"></select>
+                        </div>
+                        
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Tipo de Aeronave</label>
-                                <select id="aircraft_type"
-                                        class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
-                                    <option value="">Selecione o tipo...</option>
-                                    <option value="light_fighter">Caça Leve</option>
-                                    <option value="heavy_fighter">Caça Pesado/Interceptor</option>
-                                    <option value="cas">Apoio Aéreo Próximo (CAS)</option>
-                                    <option value="tactical_bomber">Bombardeiro Tático</option>
-                                    <option value="strategic_bomber">Bombardeiro Estratégico</option>
-                                    <option value="zeppelin">Zeppelin</option>
-                                    <option value="naval_fighter">Caça Naval</option>
-                                    <option value="naval_cas">CAS Naval</option>
-                                    <option value="naval_bomber">Bombardeiro Naval</option>
-                                    <option value="naval_recon">Reconhecimento Naval</option>
-                                    <option value="transport">Transporte</option>
-                                    <option value="seaplane">Hidroavião</option>
-                                </select>
-                                <p id="aircraft_type_note" class="text-sm text-gray-600 mt-1"></p>
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Material da Estrutura</label>
-                                <select id="structure_type"
-                                        class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
-                                    <option value="wood_fabric">Madeira e Tecido</option>
-                                    <option value="wood_metal">Madeira e Metal</option>
-                                    <option value="all_metal">Metal Completo</option>
-                                    <option value="duralumin">Duralumínio (Monocoque)</option>
-                                </select>
-                                <p id="structure_note" class="text-sm text-gray-600 mt-1"></p>
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Tipo de Asa</label>
-                                <select id="wing_type"
-                                        class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
-                                    <option value="monoplane_cantilever">Monoplano Cantilever</option>
-                                    <option value="biplane">Biplano</option>
-                                    <option value="delta_wing">Asa Delta (Experimental)</option>
-                                </select>
-                                <p id="wing_type_note" class="text-sm text-gray-600 mt-1"></p>
-                            </div>
-                            <!-- NOVO: Posição da Asa -->
+                            <!-- Posição da Asa -->
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Posição da Asa</label>
                                 <select id="wing_position"
@@ -152,7 +140,7 @@
                                     <p id="wing_position_description" class="text-xs text-gray-700"></p>
                                 </div>
                             </div>
-                            <!-- NOVO: Formato da Asa -->
+                            <!-- Formato da Asa -->
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Formato da Asa</label>
                                 <select id="wing_shape"
@@ -164,6 +152,7 @@
                                     <p id="wing_shape_description" class="text-xs text-gray-700"></p>
                                 </div>
                             </div>
+                            <!-- Trem de Pouso -->
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Trem de Pouso</label>
                                 <select id="landing_gear_type"
@@ -237,7 +226,7 @@
                         <div class="bg-gray-50 p-4 rounded-lg mb-4 opacity-50 pointer-events-none" id="supercharger-step">
                             <h4 class="text-md font-semibold text-gray-800 mb-3">2️⃣ Escolha o Sistema de Sobrealimentação</h4>
                             <div id="supercharger-selection" class="grid grid-cols-2 lg:grid-cols-3 gap-3">
-                                <!-- Opções de sobrealimentador serão populadas aqui via JS -->
+                                <!-- Opções de sobrealimentador serão populados aqui via JS -->
                             </div>
                             <div id="supercharger-selected-info" class="mt-4 p-3 bg-blue-50 rounded-lg hidden">
                                 <h5 class="font-bold text-blue-800" id="selected_supercharger_name"></h5>
