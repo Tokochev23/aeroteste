@@ -5,7 +5,119 @@ import { updateCalculations, calculatePerformanceAtAltitude, calculateRateOfClim
 import { templateManager, stateManager } from './managers.js'; // Importa managers
 
 let currentStep = 1;
-// REMOVIDO: selectedEngineType e selectedSuperchargerType - agora são gerenciados em calculations.js
+
+/**
+ * Função genérica para criar botões de escolha a partir de um objeto de dados.
+ * @param {string} containerId - O ID do elemento div que conterá os botões.
+ * @param {string} hiddenSelectId - O ID do elemento <select> oculto que armazena o valor.
+ * @param {object} dataObject - O objeto de dados (ex: gameData.components.aircraft_types).
+ * @param {function} formatter - Uma função que recebe a chave e o objeto de dados e retorna o HTML interno do botão.
+ */
+function createChoiceButtons(containerId, hiddenSelectId, dataObject, formatter) {
+    const container = document.getElementById(containerId);
+    const hiddenSelect = document.getElementById(hiddenSelectId);
+    if (!container || !hiddenSelect) return;
+
+    container.innerHTML = ''; // Limpa o container
+    hiddenSelect.innerHTML = ''; // Limpa o select oculto
+
+    // Adiciona uma opção padrão vazia ao select oculto
+    const defaultOption = document.createElement('option');
+    defaultOption.value = '';
+    defaultOption.textContent = 'Selecione...';
+    hiddenSelect.appendChild(defaultOption);
+
+    Object.entries(dataObject).forEach(([key, data]) => {
+        // Popula o select oculto
+        const option = document.createElement('option');
+        option.value = key;
+        option.textContent = data.name;
+        hiddenSelect.appendChild(option);
+
+        // Cria o botão
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'choice-btn p-3 border rounded-lg hover:bg-blue-50 transition-colors text-left bg-white border-gray-300';
+        button.dataset.value = key;
+        button.innerHTML = formatter(key, data);
+        
+        button.addEventListener('click', () => {
+            // Atualiza o valor do select oculto
+            hiddenSelect.value = key;
+            
+            // Atualiza o estilo dos botões
+            container.querySelectorAll('.choice-btn').forEach(btn => {
+                btn.classList.remove('selected', 'bg-blue-100', 'border-blue-500');
+                btn.classList.add('bg-white', 'border-gray-300');
+            });
+            button.classList.add('selected', 'bg-blue-100', 'border-blue-500');
+            
+            // Dispara o cálculo
+            updateCalculations();
+        });
+
+        container.appendChild(button);
+    });
+}
+
+/**
+ * Formata o conteúdo HTML para os botões de Tipo de Aeronave.
+ * @param {string} key - A chave do tipo de aeronave.
+ * @param {object} data - O objeto de dados do tipo de aeronave.
+ * @returns {string} - O HTML interno para o botão.
+ */
+function formatAircraftTypeButton(key, data) {
+    return `
+        <div class="font-bold text-gray-800">${data.name}</div>
+        <div class="text-xs text-gray-600 mt-1">${data.description}</div>
+    `;
+}
+
+/**
+ * Formata o conteúdo HTML para os botões de Material da Estrutura.
+ * @param {string} key - A chave do material.
+ * @param {object} data - O objeto de dados do material.
+ * @returns {string} - O HTML interno para o botão.
+ */
+function formatStructureTypeButton(key, data) {
+    return `
+        <div class="font-bold text-gray-800">${data.name}</div>
+        <div class="text-xs text-gray-600 mt-1">${data.description}</div>
+        <div class="flex flex-wrap gap-x-3 gap-y-1 mt-2 text-xs">
+            <span class="${data.cost_mod < 1 ? 'text-green-600' : 'text-red-600'}">Custo: ${data.cost_mod}x</span>
+            <span class="${data.weight_mod < 1 ? 'text-green-600' : 'text-red-600'}">Peso: ${data.weight_mod}x</span>
+            <span class="${data.reliability_mod > 1 ? 'text-green-600' : 'text-red-600'}">Confiab.: ${data.reliability_mod}x</span>
+        </div>
+    `;
+}
+
+/**
+ * Formata o conteúdo HTML para os botões de Tipo de Asa.
+ * @param {string} key - A chave do tipo de asa.
+ * @param {object} data - O objeto de dados do tipo de asa.
+ * @returns {string} - O HTML interno para o botão.
+ */
+function formatWingTypeButton(key, data) {
+    return `
+        <div class="font-bold text-gray-800">${data.name}</div>
+        <div class="text-xs text-gray-600 mt-1">${data.description}</div>
+         <div class="flex flex-wrap gap-x-3 gap-y-1 mt-2 text-xs">
+            <span class="${data.maneuverability_mod > 1 ? 'text-green-600' : 'text-red-600'}">Manobra: ${data.maneuverability_mod}x</span>
+            <span class="${data.drag_mod < 1 ? 'text-green-600' : 'text-red-600'}">Arrasto: ${data.drag_mod}x</span>
+        </div>
+    `;
+}
+
+
+/**
+ * Inicializa todos os seletores de botão.
+ */
+export function initializeChoiceButtons() {
+    createChoiceButtons('aircraft_type_selection', 'aircraft_type', gameData.components.aircraft_types, formatAircraftTypeButton);
+    createChoiceButtons('structure_type_selection', 'structure_type', gameData.components.structure_materials, formatStructureTypeButton);
+    createChoiceButtons('wing_type_selection', 'wing_type', gameData.components.wing_types, formatWingTypeButton);
+}
+
 
 // Função auxiliar para preencher as listas de equipamentos
 function populateEquipmentListInUI(elementId, items) {
@@ -92,10 +204,8 @@ export function updateUI(performance) {
         'display_name': inputs.aircraftName,
         'display_type': typeData.name,
         'display_doctrine': gameData.doctrines[inputs.selectedAirDoctrine]?.name || '-',
-        // Corrigido para formatar como moeda
         'unit_cost': `£ ${adjustedUnitCost.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`,
         'total_production_cost': `£ ${(adjustedUnitCost * inputs.quantity).toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`,
-        // Corrigido para garantir que baseMetalCost é um número e formatado corretamente
         'total_metal_cost': (baseMetalCost * inputs.quantity).toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 }),
         'total_weight': `${Math.round(combatWeight).toLocaleString('pt-BR')} kg`,
         'total_power': `${Math.round(totalEnginePower).toLocaleString('pt-BR')} hp`,
@@ -155,9 +265,6 @@ export function updateUI(performance) {
     }
     updateStatusAndWarnings(performance);
 
-    // Adiciona a lógica para preencher as listas de equipamentos no resumo da página principal
-    // CORREÇÃO: O erro ocorria aqui porque gameData.components.wing_features não existia.
-    // A correção principal está em data.js, onde este objeto foi adicionado.
     populateEquipmentListInUI('summary_wing_features', inputs.checkboxes.wing_features.map(id => gameData.components.wing_features[id]?.name));
     populateEquipmentListInUI('summary_engine_enhancements', inputs.checkboxes.engine_enhancements.map(id => gameData.components.engine_enhancements[id]?.name));
     populateEquipmentListInUI('summary_protection', inputs.checkboxes.protection.map(id => gameData.components.protection[id]?.name));
@@ -166,7 +273,6 @@ export function updateUI(performance) {
     populateEquipmentListInUI('summary_equipment', inputs.checkboxes.equipment.map(id => gameData.components.equipment[id]?.name));
     populateEquipmentListInUI('summary_maintainability_features', inputs.checkboxes.maintainability_features.map(id => gameData.components.maintainability_features[id]?.name));
 
-    // Atualiza o display de armamento limitado
     const armamentLimitsNote = document.getElementById('armament_limits_note');
     if (performance.armamentLimitExceeded && armamentLimitsNote) {
         armamentLimitsNote.classList.remove('hidden');
@@ -183,10 +289,9 @@ export function toggleStep(step) {
     const content = document.getElementById(`step_${step}_content`);
     const icon = document.getElementById(`step_${step}_icon`);
     const card = document.getElementById(`step_${step}`);
-    if (!content || !icon || !card) return; // Garante que os elementos existem
+    if (!content || !icon || !card) return;
 
     if (content.classList.contains('hidden')) {
-        // Esconde todos os outros passos
         for (let i = 1; i <= 5; i++) {
             const otherContent = document.getElementById(`step_${i}_content`);
             const otherIcon = document.getElementById(`step_${i}_icon`);
@@ -199,13 +304,11 @@ export function toggleStep(step) {
                 }
             }
         }
-        // Mostra o passo selecionado
         content.classList.remove('hidden');
         icon.classList.add('rotate-180');
         card.classList.add('active');
         currentStep = step;
     } else {
-        // Esconde o passo se já estiver aberto
         content.classList.add('hidden');
         icon.classList.remove('rotate-180');
         card.classList.remove('active');
@@ -216,7 +319,6 @@ export function toggleStep(step) {
  * Atualiza a barra de progresso com base nos campos obrigatórios preenchidos.
  */
 export async function updateProgress() {
-    // Obtém as seleções atuais de motor/supercharger do calculations.js
     const { getCurrentSelections } = await import('./calculations.js');
     const { selectedEngineType, selectedSuperchargerType } = getCurrentSelections();
     
@@ -227,13 +329,12 @@ export async function updateProgress() {
         if (field && field.value && field.value !== '' && field.value !== 'loading') completedFields++;
     });
 
-    // Verifica se os tipos de motor e supercharger foram selecionados
     if (selectedEngineType) completedFields++;
     if (selectedSuperchargerType) completedFields++;
 
     const progressBar = document.getElementById('progress_bar');
     if (progressBar) {
-        progressBar.style.width = `${(completedFields / (requiredFields.length + 2)) * 100}%`; // +2 para motor e supercharger
+        progressBar.style.width = `${(completedFields / (requiredFields.length + 2)) * 100}%`;
     }
 }
 
@@ -243,13 +344,11 @@ export async function updateProgress() {
 export function generateSheet() {
     const performanceData = updateCalculations();
     if (performanceData) {
-        // Passa a URL da imagem atual para a ficha
         const aircraftImage = document.getElementById('aircraft_image');
         if (aircraftImage) {
             performanceData.aircraftImageSrc = aircraftImage.src;
         }
 
-        // Gera os dados do gráfico aqui para que eles sejam salvos no localStorage
         performanceData.performanceGraphData = generatePerformanceGraphData(performanceData);
         localStorage.setItem('aircraftSheetData', JSON.stringify(performanceData));
         localStorage.setItem('realWorldAircraftData', JSON.stringify(realWorldAircraft));
@@ -258,9 +357,9 @@ export function generateSheet() {
         console.error("Não foi possível gerar a ficha: dados da aeronave são inválidos.");
         const statusContainer = document.getElementById('status-container');
         if (statusContainer) {
-            statusContainer.innerHTML = ''; // Limpa mensagens anteriores
+            statusContainer.innerHTML = '';
             const errorEl = document.createElement('div');
-            errorEl.className = 'p-3 rounded-lg text-center text-sm font-medium status-error text-red-600'; // Classes Tailwind
+            errorEl.className = 'p-3 rounded-lg text-center text-sm font-medium status-error text-red-600';
             errorEl.textContent = '🔥 Erro: Preencha os campos obrigatórios para gerar a ficha.';
             statusContainer.appendChild(errorEl);
         }
@@ -306,7 +405,6 @@ export function generatePerformanceGraphData(performanceData) {
 
 /**
  * Função auxiliar para encontrar um item de componente em diferentes categorias em gameData.components.
- * Isso é útil porque os IDs dos checkboxes podem não mapear diretamente para suas chaves de categoria de nível superior.
  * @param {string} id - O ID do componente a ser encontrado.
  * @returns {object|null} - O objeto do componente se encontrado, caso contrário null.
  */
@@ -332,7 +430,6 @@ export function updateStatusAndWarnings(performance) {
     const { totalEnginePower, combatWeight, wingLoading, finalReliability, typeData, rawSpeedKmhAlt, rawRangeKm, armamentLimitExceeded } = performance;
     const powerToWeightRatio = (totalEnginePower * 745.7) / (combatWeight * gameData.constants.standard_gravity_ms2);
 
-    // Adiciona avisos com base nas estatísticas
     if (powerToWeightRatio < 0.25 && typeData.name.includes('Caça')) warnings.push({ type: 'error', text: '🔥 Relação peso/potência crítica! Aeronave com performance muito baixa.' });
     else if (powerToWeightRatio < 0.35 && typeData.name.includes('Caça')) warnings.push({ type: 'warning', text: '⚠️ Relação peso/potência baixa. Aumente a potência ou reduza o peso.' });
     if (wingLoading > 200 && typeData.name.includes('Caça')) warnings.push({ type: 'warning', text: '⚠️ Carga alar alta, prejudicando a manobrabilidade em baixa velocidade.' });
@@ -347,14 +444,12 @@ export function updateStatusAndWarnings(performance) {
         warnings.push({ type: 'warning', text: '⚠️ Armamento selecionado excede os limites da configuração de asa. Alguns armamentos foram removidos.' });
     }
 
-    // Mensagem de sucesso se não houver avisos
     if (warnings.length === 0) {
         warnings.push({ type: 'ok', text: '✅ Design pronto para os céus! Clique no ícone de relatório para gerar a ficha.' });
     }
-    // Exibe os avisos/mensagens
     warnings.forEach(warning => {
         const statusEl = document.createElement('div');
-        statusEl.className = `p-3 rounded-lg text-center text-sm font-medium status-${warning.type}`; // Classes Tailwind
+        statusEl.className = `p-3 rounded-lg text-center text-sm font-medium status-${warning.type}`;
         statusEl.textContent = warning.text;
         statusContainer.appendChild(statusEl);
     });
@@ -393,12 +488,11 @@ export function createTemplateMenu(templateManagerInstance) {
         btn.addEventListener('click', (e) => { e.stopPropagation(); menu.classList.toggle('hidden'); });
         document.addEventListener('click', (e) => { if (!menuContainer.contains(e.target)) menu.classList.add('hidden'); });
 
-        // Adiciona listeners aos botões de template dentro do menu
         document.querySelectorAll('.template-apply-btn').forEach(button => {
             button.addEventListener('click', (e) => {
                 const templateId = e.currentTarget.dataset.templateId;
                 templateManagerInstance.applyTemplate(templateId);
-                menu.classList.add('hidden'); // Esconde o menu após aplicar
+                menu.classList.add('hidden');
             });
         });
     }
@@ -443,11 +537,9 @@ export function populateWingDropdowns() {
     const wingShapeSelect = document.getElementById('wing_shape');
     const currentTechLevel = gameData.currentCountryTechLevel || 0;
 
-    // Popula Posição da Asa
     if (wingPositionSelect) {
         wingPositionSelect.innerHTML = '<option value="">Selecione a Posição...</option>';
         const sortedPositions = Object.keys(gameData.components.wing_positions).sort((a, b) => {
-            // Garante que "Biplano" esteja sempre no topo se for um biplano
             const wingType = document.getElementById('wing_type')?.value;
             if (wingType === 'biplane') {
                 if (a === 'biplane_wing_pos') return -1;
@@ -470,7 +562,6 @@ export function populateWingDropdowns() {
         wingPositionSelect.addEventListener('change', updateWingPositionInfo);
     }
 
-    // Popula Formato da Asa
     if (wingShapeSelect) {
         wingShapeSelect.innerHTML = '<option value="">Selecione o Formato...</option>';
         const sortedShapes = Object.keys(gameData.components.wing_shapes).sort((a, b) =>
@@ -511,7 +602,7 @@ function updateWingPositionInfo() {
         img.src = '';
         desc.textContent = '';
     }
-    updateCalculations(); // Recalcula ao mudar a asa
+    updateCalculations();
 }
 
 /**
@@ -534,7 +625,7 @@ function updateWingShapeInfo() {
         img.src = '';
         desc.textContent = '';
     }
-    updateCalculations(); // Recalcula ao mudar a asa
+    updateCalculations();
 }
 
 /**
@@ -542,11 +633,9 @@ function updateWingShapeInfo() {
  * @param {number} techLevel - O nível de tecnologia aeronáutica do país.
  */
 export function applyTechLevelRestrictions(techLevel) {
-    gameData.currentCountryTechLevel = techLevel; // Salva o nível de tecnologia atual no gameData
+    gameData.currentCountryTechLevel = techLevel;
 
-    // Encontra o tier de tecnologia aplicável
     let currentTier = null;
-    // Garante que o tier mais alto aplicável é selecionado
     for (const tierKey in techLevelRestrictions) {
         const tier = techLevelRestrictions[tierKey];
         if (techLevel >= tier.min_tech) {
@@ -555,73 +644,61 @@ export function applyTechLevelRestrictions(techLevel) {
             }
         }
     }
-
-    // Se nenhum tier for encontrado (ex: techLevel < 0), usa o mais primitivo
     if (!currentTier) {
         currentTier = techLevelRestrictions.tier_primitive;
     }
 
-    // Popula e filtra os dropdowns de asa (chamada aqui para garantir que o techLevel esteja atualizado)
     populateWingDropdowns();
 
-    // Itera sobre todos os selects e checkboxes para aplicar restrições
     document.querySelectorAll('select, input[type="checkbox"]').forEach(element => {
         const componentId = element.id;
         const componentData = findItemAcrossCategories(componentId);
 
-        // Resetar estado de desabilitado e oculto
         element.disabled = false;
-        if (element.closest('.checkbox-row')) { // Para checkboxes, esconde a linha inteira
+        if (element.closest('.checkbox-row')) {
             element.closest('.checkbox-row').classList.remove('hidden');
-        } else if (element.tagName === 'OPTION') { // Para opções dentro de selects
+        } else if (element.tagName === 'OPTION') {
             element.disabled = false;
-            element.textContent = element.dataset.originalText || element.textContent.replace(/ \(Requer Tec\. \d+\+\)/g, ''); // Remove o texto de restrição
-        } else if (element.tagName === 'SELECT') {
-            // Não desabilita o select inteiro, apenas as opções
+            element.textContent = element.dataset.originalText || element.textContent.replace(/ \(Requer Tec\. \d+\+\)/g, '');
         }
 
-        // Aplica restrições de componentes bloqueados
         if (currentTier.blocked_components.includes(componentId)) {
             if (element.tagName === 'SELECT') {
-                // Se o select inteiro é bloqueado, desabilita e seleciona a primeira opção válida se houver
                 element.disabled = true;
-                element.value = ''; // Limpa a seleção
-                if (element.options.length > 0) element.value = element.options[0].value; // Seleciona o primeiro
+                element.value = '';
+                if (element.options.length > 0) element.value = element.options[0].value;
             } else if (element.type === 'checkbox') {
-                element.checked = false; // Desmarca
+                element.checked = false;
                 element.disabled = true;
                 if (element.closest('.checkbox-row')) {
-                    element.closest('.checkbox-row').classList.add('hidden'); // Esconde o checkbox
+                    element.closest('.checkbox-row').classList.add('hidden');
                 }
             }
         }
 
-        // Aplica restrições de tech_level_required para selects e checkboxes
         if (componentData && componentData.tech_level_required !== undefined) {
-            if (techLevel < componentData.tech_level_required) { // Usando techLevel (parâmetro) aqui
+            if (techLevel < componentData.tech_level_required) {
                 if (element.tagName === 'SELECT') {
-                    // Desabilita a opção específica dentro do select
-                    const option = element.querySelector(`option[value="${key}"]`); // Usar 'key' da iteração, não 'componentId'
-                    if (option) {
-                        option.disabled = true;
-                        option.dataset.originalText = option.textContent; // Salva o texto original
-                        option.textContent += ` (Requer Tec. ${componentData.tech_level_required}+)`;
-                    }
+                    Array.from(element.options).forEach(option => {
+                        if (option.value === componentId) {
+                            option.disabled = true;
+                            option.dataset.originalText = option.textContent;
+                            option.textContent += ` (Requer Tec. ${componentData.tech_level_required}+)`;
+                        }
+                    });
                 } else if (element.type === 'checkbox') {
-                    element.checked = false; // Desmarca
+                    element.checked = false;
                     element.disabled = true;
                     if (element.closest('.checkbox-row')) {
-                        element.closest('.checkbox-row').classList.add('hidden'); // Esconde o checkbox
+                        element.closest('.checkbox-row').classList.add('hidden');
                     }
                 }
             }
         }
     });
 
-    // Lógica específica para o dropdown de tipo de asa (wing_type)
     const wingTypeSelect = document.getElementById('wing_type');
     if (wingTypeSelect) {
-        // Se o país está no tier primitivo, força o biplano
         if (currentTier.forced_wing_type === 'biplane_wing_pos') {
             wingTypeSelect.value = 'biplane';
             wingTypeSelect.disabled = true;
@@ -630,17 +707,14 @@ export function applyTechLevelRestrictions(techLevel) {
         }
     }
 
-    // Lógica específica para o dropdown de posição da asa (wing_position)
     const wingPositionSelect = document.getElementById('wing_position');
     if (wingPositionSelect) {
-        // Se o tipo de asa é biplano, força a posição "Biplano"
         if (document.getElementById('wing_type')?.value === 'biplane') {
             wingPositionSelect.value = 'biplane_wing_pos';
             wingPositionSelect.disabled = true;
-            updateWingPositionInfo(); // Atualiza a info da asa
+            updateWingPositionInfo();
         } else {
             wingPositionSelect.disabled = false;
-            // Se a posição atual for biplano e o tipo de asa mudou, reseta a posição
             if (wingPositionSelect.value === 'biplane_wing_pos') {
                 wingPositionSelect.value = '';
                 updateWingPositionInfo();
@@ -648,9 +722,7 @@ export function applyTechLevelRestrictions(techLevel) {
         }
     }
 
-    // Lógica para os novos tipos de motor (Passo 3)
     populateEngineTypeSelection();
-    // Limpa a seleção atual de motor/supercharger se o nível de tecnologia mudou
     setCurrentSelections(null, null);
     document.getElementById('engine-selected-info').classList.add('hidden');
     document.getElementById('supercharger-step').classList.add('opacity-50', 'pointer-events-none');
@@ -659,11 +731,11 @@ export function applyTechLevelRestrictions(techLevel) {
     document.getElementById('performance-sliders-step').classList.add('opacity-50', 'pointer-events-none');
     document.getElementById('target-speed').disabled = true;
     document.getElementById('target-range').disabled = true;
-    document.getElementById('target-speed').value = 0; // Resetar valores
+    document.getElementById('target-speed').value = 0;
     document.getElementById('target-range').value = 0;
-    updateUI(null); // Limpa a UI para refletir o reset
+    updateUI(null);
 
-    updateCalculations(); // Recalcula tudo após aplicar as restrições
+    updateCalculations();
 }
 
 /**
@@ -683,7 +755,6 @@ export function populateEngineTypeSelection() {
         const isNationSpecificBlocked = engine.nation_specific && !engine.nation_specific.includes(countryName);
 
         if (isDisabled || isBlockedByTier || isNationSpecificBlocked) {
-            // Não adiciona o botão se estiver bloqueado
             return;
         }
 
@@ -713,11 +784,9 @@ export function populateEngineTypeSelection() {
  * @param {string} engineKey - A chave do tipo de motor selecionado.
  */
 function selectEngineType(engineKey) {
-    // Atualiza a seleção no calculations.js
     setCurrentSelections(engineKey, null);
     const engine = gameData.components.engineTypes[engineKey];
 
-    // Atualiza visualmente os botões
     document.querySelectorAll('.engine-choice-btn').forEach(btn => {
         btn.classList.remove('bg-blue-100', 'border-blue-500');
         btn.classList.add('bg-white', 'border-gray-300');
@@ -728,7 +797,6 @@ function selectEngineType(engineKey) {
         selectedButton.classList.add('bg-blue-100', 'border-blue-500');
     }
 
-    // Atualiza o display de informações do motor
     document.getElementById('selected_engine_name').textContent = engine.name;
     document.getElementById('selected_engine_description').textContent = engine.description;
     const charContainer = document.getElementById('selected_engine_characteristics');
@@ -761,11 +829,9 @@ function selectEngineType(engineKey) {
     });
     document.getElementById('engine-selected-info').classList.remove('hidden');
 
-    // Habilita o próximo passo
     document.getElementById('supercharger-step').classList.remove('opacity-50', 'pointer-events-none');
-    populateSuperchargerSelection(); // Popula as opções de supercharger
+    populateSuperchargerSelection();
     
-    // Resetar supercharger selecionado ao mudar o motor
     setCurrentSelections(engineKey, null);
     document.getElementById('supercharger-selected-info').classList.add('hidden');
     document.getElementById('combo-warning').classList.add('hidden');
@@ -773,7 +839,7 @@ function selectEngineType(engineKey) {
     document.getElementById('target-speed').disabled = true;
     document.getElementById('target-range').disabled = true;
 
-    updateCalculations(); // Recalcula para atualizar os limites
+    updateCalculations();
     updateProgress();
 }
 
@@ -788,7 +854,6 @@ export async function populateSuperchargerSelection() {
     const currentTechLevel = gameData.currentCountryTechLevel || 0;
     const countryName = document.getElementById('country_doctrine')?.value;
     
-    // Obtém as seleções atuais corretamente
     const { getCurrentSelections } = await import('./calculations.js');
     const { selectedEngineType } = getCurrentSelections();
 
@@ -796,19 +861,18 @@ export async function populateSuperchargerSelection() {
         const isDisabled = supercharger.tech_level_required && currentTechLevel < supercharger.tech_level_required;
         const isNationSpecificBlocked = supercharger.nation_specific && !supercharger.nation_specific.includes(countryName);
 
-        // Verifica incompatibilidade com o motor selecionado
         const comboLimits = engineSuperchargerCombos.calculateLimits(selectedEngineType, key);
         const isBlockedByCombo = comboLimits.special?.blocked;
 
         if (isDisabled || isNationSpecificBlocked) {
-            return; // Não adiciona o botão se estiver bloqueado por tecnologia ou país
+            return;
         }
 
         const button = document.createElement('button');
         button.type = 'button';
         button.className = `supercharger-choice-btn p-3 border rounded-lg hover:bg-blue-50 transition-colors text-left bg-white border-gray-300 ${isBlockedByCombo ? 'opacity-50 cursor-not-allowed' : ''}`;
         button.dataset.supercharger = key;
-        button.disabled = isBlockedByCombo; // Desabilita se a combinação for bloqueada
+        button.disabled = isBlockedByCombo;
         button.innerHTML = `
             <div class="font-bold text-gray-800">${supercharger.name}</div>
             <div class="text-xs text-gray-600 mt-1">${supercharger.best_for}</div>
@@ -830,15 +894,12 @@ export async function populateSuperchargerSelection() {
  * @param {string} superchargerKey - A chave do tipo de sobrealimentador selecionado.
  */
 async function selectSuperchargerType(superchargerKey) {
-    // Obtém o motor selecionado atual
     const { getCurrentSelections } = await import('./calculations.js');
     const { selectedEngineType } = getCurrentSelections();
     
-    // Atualiza a seleção no calculations.js
     setCurrentSelections(selectedEngineType, superchargerKey);
     const supercharger = gameData.components.superchargerTypes[superchargerKey];
 
-    // Atualiza visualmente os botões
     document.querySelectorAll('.supercharger-choice-btn').forEach(btn => {
         btn.classList.remove('bg-blue-100', 'border-blue-500');
         btn.classList.add('bg-white', 'border-gray-300');
@@ -849,7 +910,6 @@ async function selectSuperchargerType(superchargerKey) {
         selectedButton.classList.add('bg-blue-100', 'border-blue-500');
     }
 
-    // Atualiza o display de informações do supercharger
     document.getElementById('selected_supercharger_name').textContent = supercharger.name;
     document.getElementById('selected_supercharger_description').textContent = supercharger.description;
     const charContainer = document.getElementById('selected_supercharger_characteristics');
@@ -882,7 +942,6 @@ async function selectSuperchargerType(superchargerKey) {
     });
     document.getElementById('supercharger-selected-info').classList.remove('hidden');
 
-    // Verifica a combinação motor-supercharger
     const comboLimits = engineSuperchargerCombos.calculateLimits(selectedEngineType, superchargerKey);
     const comboWarningEl = document.getElementById('combo-warning');
     if (comboLimits.special?.blocked) {
@@ -894,10 +953,10 @@ async function selectSuperchargerType(superchargerKey) {
     } else {
         comboWarningEl.classList.add('hidden');
         document.getElementById('performance-sliders-step').classList.remove('opacity-50', 'pointer-events-none');
-        updatePerformanceSliders(comboLimits); // Atualiza os sliders com os limites da combinação
+        updatePerformanceSliders(comboLimits);
     }
 
-    updateCalculations(); // Recalcula
+    updateCalculations();
     updateProgress();
 }
 
@@ -911,12 +970,12 @@ export function updatePerformanceSliders(limits) {
 
     speedSlider.min = limits.speed.min;
     speedSlider.max = limits.speed.max;
-    speedSlider.value = Math.round((limits.speed.min + limits.speed.max) / 2); // Define um valor inicial médio
+    speedSlider.value = Math.round((limits.speed.min + limits.speed.max) / 2);
     speedSlider.disabled = false;
 
     rangeSlider.min = limits.range.min;
     rangeSlider.max = limits.range.max;
-    rangeSlider.value = Math.round((limits.range.min + limits.range.max) / 2); // Define um valor inicial médio
+    rangeSlider.value = Math.round((limits.range.min + limits.range.max) / 2);
     rangeSlider.disabled = false;
 
     document.getElementById('speed-min').textContent = `Min: ${limits.speed.min} km/h`;
@@ -925,13 +984,11 @@ export function updatePerformanceSliders(limits) {
     document.getElementById('range-max').textContent = `Max: ${limits.range.max} km`;
     document.getElementById('max-altitude').textContent = `${limits.altitude} metros`;
 
-    // Adiciona listeners para os sliders para atualizar as consequências
     speedSlider.oninput = updateDesignConsequences;
     rangeSlider.oninput = updateDesignConsequences;
 
-    // Dispara a atualização inicial das consequências
     updateDesignConsequences();
-    populateEngineEnhancementsCheckboxes(); // Popula melhorias do motor com base no tipo
+    populateEngineEnhancementsCheckboxes();
 }
 
 /**
@@ -941,7 +998,6 @@ export function updateDesignConsequences() {
     const targetSpeed = parseInt(document.getElementById('target-speed').value);
     const targetRange = parseInt(document.getElementById('target-range').value);
 
-    // Atualiza os valores exibidos
     document.getElementById('speed-value').textContent = `${targetSpeed} km/h`;
     document.getElementById('range-value').textContent = `${targetRange} km`;
 
@@ -951,11 +1007,9 @@ export function updateDesignConsequences() {
     let speedConsequences = [];
     let rangeConsequences = [];
 
-    // Consequências de Velocidade
-    // Encontra o tier de penalidade de velocidade mais próximo e abaixo do targetSpeed
     const speedPenaltyTierKey = Object.keys(designPenalties.speedPenalties)
         .filter(key => parseInt(key) <= targetSpeed)
-        .sort((a, b) => parseInt(b) - parseInt(a))[0]; // Pega o maior tier menor ou igual
+        .sort((a, b) => parseInt(b) - parseInt(a))[0];
 
     if (speedPenaltyTierKey) {
         const penalties = designPenalties.speedPenalties[speedPenaltyTierKey];
@@ -966,17 +1020,14 @@ export function updateDesignConsequences() {
         if (penalties.accident_risk) speedConsequences.push(`Risco de Acidente: ${penalties.accident_risk}`);
     }
 
-    // Benefícios de baixa velocidade
     if (targetSpeed < 450) {
         speedConsequences.push("✅ Motor simples e confiável (+20% confiabilidade)");
         speedConsequences.push("✅ Custo de produção reduzido em 30%");
     }
 
-    // Consequências de Alcance
-    // Encontra o tier de penalidade de alcance mais próximo e abaixo do targetRange
     const rangePenaltyTierKey = Object.keys(designPenalties.rangePenalties)
         .filter(key => parseInt(key) <= targetRange)
-        .sort((a, b) => parseInt(b) - parseInt(a))[0]; // Pega o maior tier menor ou igual
+        .sort((a, b) => parseInt(b) - parseInt(a))[0];
 
     if (rangePenaltyTierKey) {
         const penalties = designPenalties.rangePenalties[rangePenaltyTierKey];
@@ -987,7 +1038,7 @@ export function updateDesignConsequences() {
     speedConsequencesEl.innerHTML = speedConsequences.length > 0 ? speedConsequences.map(c => `<span>${c}</span>`).join('<br>') : '<span>Nenhuma consequência notável.</span>';
     rangeConsequencesEl.innerHTML = rangeConsequences.length > 0 ? rangeConsequences.map(c => `<span>${c}</span>`).join('<br>') : '<span>Nenhuma consequência notável.</span>';
 
-    updateCalculations(); // Recalcula para aplicar os efeitos dos sliders
+    updateCalculations();
 }
 
 /**
@@ -997,7 +1048,7 @@ function populateEngineEnhancementsCheckboxes() {
     const container = document.querySelector('#engine_enhancements_checkboxes .grid');
     if (!container) return;
 
-    container.innerHTML = ''; // Limpa os itens anteriores
+    container.innerHTML = '';
     const currentTechLevel = gameData.currentCountryTechLevel || 0;
 
     Object.entries(gameData.components.engine_enhancements).forEach(([key, enhancement]) => {
@@ -1012,7 +1063,6 @@ function populateEngineEnhancementsCheckboxes() {
         `;
         container.appendChild(div);
 
-        // Adiciona listener para recalcular quando um checkbox é alterado
         div.querySelector('input[type="checkbox"]').addEventListener('change', updateCalculations);
     });
 }
@@ -1021,12 +1071,10 @@ function populateEngineEnhancementsCheckboxes() {
  * Popula os dropdowns e checkboxes com base no nível de tecnologia do país.
  * Esta função é chamada ao carregar a página e ao mudar o país.
  */
-export function populateTechRestrictedFields(techLevel) { // Parâmetro techLevel adicionado
-    gameData.currentCountryTechLevel = techLevel; // Salva o nível de tecnologia atual no gameData
+export function populateTechRestrictedFields(techLevel) {
+    gameData.currentCountryTechLevel = techLevel;
 
-    // Encontra o tier de tecnologia aplicável
     let currentTier = null;
-    // Garante que o tier mais alto aplicável é selecionado
     for (const tierKey in techLevelRestrictions) {
         const tier = techLevelRestrictions[tierKey];
         if (techLevel >= tier.min_tech) {
@@ -1035,75 +1083,61 @@ export function populateTechRestrictedFields(techLevel) { // Parâmetro techLeve
             }
         }
     }
-
-    // Se nenhum tier for encontrado (ex: techLevel < 0), usa o mais primitivo
     if (!currentTier) {
         currentTier = techLevelRestrictions.tier_primitive;
     }
 
-    // Popula e filtra os dropdowns de asa (chamada aqui para garantir que o techLevel esteja atualizado)
     populateWingDropdowns();
 
-    // Itera sobre todos os selects e checkboxes para aplicar restrições
     document.querySelectorAll('select, input[type="checkbox"]').forEach(element => {
         const componentId = element.id;
         const componentData = findItemAcrossCategories(componentId);
 
-        // Resetar estado de desabilitado e oculto
         element.disabled = false;
-        if (element.closest('.checkbox-row')) { // Para checkboxes, esconde a linha inteira
+        if (element.closest('.checkbox-row')) {
             element.closest('.checkbox-row').classList.remove('hidden');
-        } else if (element.tagName === 'OPTION') { // Para opções dentro de selects
+        } else if (element.tagName === 'OPTION') {
             element.disabled = false;
-            element.textContent = element.dataset.originalText || element.textContent.replace(/ \(Requer Tec\. \d+\+\)/g, ''); // Remove o texto de restrição
-        } else if (element.tagName === 'SELECT') {
-            // Não desabilita o select inteiro, apenas as opções
+            element.textContent = element.dataset.originalText || element.textContent.replace(/ \(Requer Tec\. \d+\+\)/g, '');
         }
 
-        // Aplica restrições de componentes bloqueados
         if (currentTier.blocked_components.includes(componentId)) {
             if (element.tagName === 'SELECT') {
-                // Se o select inteiro é bloqueado, desabilita e seleciona a primeira opção válida se houver
                 element.disabled = true;
-                element.value = ''; // Limpa a seleção
-                if (element.options.length > 0) element.value = element.options[0].value; // Seleciona o primeiro
+                element.value = '';
+                if (element.options.length > 0) element.value = element.options[0].value;
             } else if (element.type === 'checkbox') {
-                element.checked = false; // Desmarca
+                element.checked = false;
                 element.disabled = true;
                 if (element.closest('.checkbox-row')) {
-                    element.closest('.checkbox-row').classList.add('hidden'); // Esconde o checkbox
+                    element.closest('.checkbox-row').classList.add('hidden');
                 }
             }
         }
 
-        // Aplica restrições de tech_level_required para selects e checkboxes
         if (componentData && componentData.tech_level_required !== undefined) {
-            if (techLevel < componentData.tech_level_required) { // Usando techLevel (parâmetro) aqui
+            if (techLevel < componentData.tech_level_required) {
                 if (element.tagName === 'SELECT') {
-                    // Desabilita a opção específica dentro do select
-                    // Precisa iterar sobre as opções para desabilitar corretamente
                     Array.from(element.options).forEach(option => {
                         if (option.value === componentId) {
                             option.disabled = true;
-                            option.dataset.originalText = option.textContent; // Salva o texto original
+                            option.dataset.originalText = option.textContent;
                             option.textContent += ` (Requer Tec. ${componentData.tech_level_required}+)`;
                         }
                     });
                 } else if (element.type === 'checkbox') {
-                    element.checked = false; // Desmarca
+                    element.checked = false;
                     element.disabled = true;
                     if (element.closest('.checkbox-row')) {
-                        element.closest('.checkbox-row').classList.add('hidden'); // Esconde o checkbox
+                        element.closest('.checkbox-row').classList.add('hidden');
                     }
                 }
             }
         }
     });
 
-    // Lógica específica para o dropdown de tipo de asa (wing_type)
     const wingTypeSelect = document.getElementById('wing_type');
     if (wingTypeSelect) {
-        // Se o país está no tier primitivo, força o biplano
         if (currentTier.forced_wing_type === 'biplane_wing_pos') {
             wingTypeSelect.value = 'biplane';
             wingTypeSelect.disabled = true;
@@ -1112,17 +1146,14 @@ export function populateTechRestrictedFields(techLevel) { // Parâmetro techLeve
         }
     }
 
-    // Lógica específica para o dropdown de posição da asa (wing_position)
     const wingPositionSelect = document.getElementById('wing_position');
     if (wingPositionSelect) {
-        // Se o tipo de asa é biplano, força a posição "Biplano"
         if (document.getElementById('wing_type')?.value === 'biplane') {
             wingPositionSelect.value = 'biplane_wing_pos';
             wingPositionSelect.disabled = true;
-            updateWingPositionInfo(); // Atualiza a info da asa
+            updateWingPositionInfo();
         } else {
             wingPositionSelect.disabled = false;
-            // Se a posição atual for biplano e o tipo de asa mudou, reseta a posição
             if (wingPositionSelect.value === 'biplane_wing_pos') {
                 wingPositionSelect.value = '';
                 updateWingPositionInfo();
@@ -1130,9 +1161,7 @@ export function populateTechRestrictedFields(techLevel) { // Parâmetro techLeve
         }
     }
 
-    // Lógica para os novos tipos de motor (Passo 3)
     populateEngineTypeSelection();
-    // Limpa a seleção atual de motor/supercharger se o nível de tecnologia mudou
     setCurrentSelections(null, null);
     document.getElementById('engine-selected-info').classList.add('hidden');
     document.getElementById('supercharger-step').classList.add('opacity-50', 'pointer-events-none');
@@ -1141,9 +1170,9 @@ export function populateTechRestrictedFields(techLevel) { // Parâmetro techLeve
     document.getElementById('performance-sliders-step').classList.add('opacity-50', 'pointer-events-none');
     document.getElementById('target-speed').disabled = true;
     document.getElementById('target-range').disabled = true;
-    document.getElementById('target-speed').value = 0; // Resetar valores
+    document.getElementById('target-speed').value = 0;
     document.getElementById('target-range').value = 0;
-    updateUI(null); // Limpa a UI para refletir o reset
+    updateUI(null);
 
-    updateCalculations(); // Recalcula tudo após aplicar as restrições
+    updateCalculations();
 }
