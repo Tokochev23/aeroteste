@@ -1,6 +1,6 @@
 // assets/js/main.js
 
-import { loadGameDataFromSheets } from './data.js';
+import { loadGameDataFromSheets, gameData } from './data.js';
 import { updateCalculations } from './calculations.js';
 import { toggleStep, generateSheet, createTemplateMenu, createUndoRedoButtons, populateWingDropdowns, applyTechLevelRestrictions, populateEngineTypeSelection } from './ui.js';
 import { debounce, stateManager, templateManager, initializeManagers } from './managers.js';
@@ -18,6 +18,9 @@ window.onload = async function() {
         console.log('Carregando dados das planilhas...');
         await loadGameDataFromSheets();
         
+        // Expõe gameData globalmente para acesso por outras partes do código
+        window.gameData = gameData;
+        
         // 2. Configura a UI básica
         console.log('Configurando UI básica...');
         setupBasicUI();
@@ -32,11 +35,11 @@ window.onload = async function() {
         
         // 5. Anexa event listeners
         console.log('Anexando event listeners...');
-        attachEventListeners();
+        await attachEventListeners();
         
         // 6. Configurações finais
         console.log('Configurações finais...');
-        finalSetup();
+        await finalSetup();
         
         // 7. Marca como inicializado
         isAppInitialized = true;
@@ -85,7 +88,7 @@ function createUIElements() {
 /**
  * Anexa todos os event listeners
  */
-function attachEventListeners() {
+async function attachEventListeners() {
     try {
         // Event listeners para campos de input e selects
         document.querySelectorAll('input, select').forEach(element => {
@@ -136,7 +139,7 @@ function attachEventListeners() {
 /**
  * Configurações finais da aplicação
  */
-function finalSetup() {
+async function finalSetup() {
     try {
         // Realiza os cálculos iniciais se possível
         setTimeout(() => {
@@ -144,11 +147,13 @@ function finalSetup() {
         }, 200);
         
         // Salva o estado inicial para undo/redo
-        setTimeout(() => {
+        setTimeout(async () => {
             if (window.autoSaveManager?.isInitialized) {
                 const formData = window.autoSaveManager.getCurrentFormData();
                 stateManager.saveState(formData);
             }
+            // Atualiza o progresso inicial
+            await safeUpdateProgress();
         }, 500);
         
     } catch (error) {
@@ -174,6 +179,24 @@ function safeUpdateCalculations() {
 }
 
 /**
+ * Wrapper seguro para updateProgress (agora async)
+ */
+async function safeUpdateProgress() {
+    if (!isAppInitialized) {
+        console.log('Aplicação ainda não foi inicializada, pulando atualização de progresso...');
+        return;
+    }
+    
+    try {
+        const { updateProgress } = await import('./ui.js');
+        await updateProgress();
+    } catch (error) {
+        console.warn('Erro ao atualizar progresso:', error);
+        // Não quebra a aplicação, apenas loga o erro
+    }
+}
+
+/**
  * Wrapper seguro para generateSheet
  */
 function safeGenerateSheet() {
@@ -188,7 +211,7 @@ function safeGenerateSheet() {
 /**
  * Manipula mudanças de país
  */
-function handleCountryChange(event) {
+async function handleCountryChange(event) {
     try {
         const countryName = event.target.value;
         if (countryName && window.gameData?.countries?.[countryName]) {
@@ -206,6 +229,7 @@ function handleCountryChange(event) {
         }
         
         safeUpdateCalculations();
+        await safeUpdateProgress();
     } catch (error) {
         console.warn('Erro ao processar mudança de país:', error);
     }
@@ -214,7 +238,7 @@ function handleCountryChange(event) {
 /**
  * Manipula mudanças de tipo de asa
  */
-function handleWingTypeChange(event) {
+async function handleWingTypeChange(event) {
     try {
         const wingType = event.target.value;
         const wingPositionSelect = document.getElementById('wing_position');
@@ -232,6 +256,7 @@ function handleWingTypeChange(event) {
         }
         
         safeUpdateCalculations();
+        await safeUpdateProgress();
     } catch (error) {
         console.warn('Erro ao processar mudança de tipo de asa:', error);
     }
@@ -269,4 +294,5 @@ function showInitializationError(error) {
 
 // Exponha algumas funções globalmente para debug/acesso via console
 window.safeUpdateCalculations = safeUpdateCalculations;
+window.safeUpdateProgress = safeUpdateProgress;
 window.isAppInitialized = () => isAppInitialized;
