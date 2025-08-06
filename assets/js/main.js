@@ -2,7 +2,8 @@
 
 import { loadGameDataFromSheets, gameData } from './data.js';
 import { updateCalculations } from './calculations.js';
-import { toggleStep, generateSheet, createTemplateMenu, createUndoRedoButtons, populateWingDropdowns, applyTechLevelRestrictions, populateEngineTypeSelection } from './ui.js';
+// CORREÇÃO: Importa a nova função 'initializeChoiceButtons'
+import { toggleStep, generateSheet, createTemplateMenu, createUndoRedoButtons, populateWingDropdowns, applyTechLevelRestrictions, populateEngineTypeSelection, initializeChoiceButtons } from './ui.js';
 import { debounce, stateManager, templateManager, initializeManagers } from './managers.js';
 
 const debouncedUpdateCalculations = debounce(updateCalculations, 250);
@@ -61,6 +62,8 @@ function setupBasicUI() {
     
     // Configura os dropdowns básicos se os dados estiverem disponíveis
     try {
+        // CORREÇÃO: Chama a função para criar os novos botões
+        initializeChoiceButtons();
         populateWingDropdowns();
     } catch (error) {
         console.warn('Erro ao popular dropdowns de asa:', error);
