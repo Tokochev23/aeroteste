@@ -35,124 +35,31 @@ body {
     padding: 10px;
     border-radius: 8px;
     border: 1px solid #e5e7eb;
-    transition: all 0.2s ease;
 }
 
-.checkbox-row:hover {
-    background-color: #f3f4f6;
-    border-color: #d1d5db;
-}
-
-/* Melhorias para as ilustrações das asas */
-#wing_position_info, #wing_shape_info {
-    transition: all 0.3s ease;
-    border: 2px solid transparent;
-}
-
-#wing_position_info.show, #wing_shape_info.show {
-    border-color: #3b82f6;
-    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
-}
-
-#wing_position_img, #wing_shape_img {
-    transition: all 0.3s ease;
-    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
-}
-
-#wing_position_img:hover, #wing_shape_img:hover {
-    transform: scale(1.05);
-    filter: drop-shadow(0 4px 8px rgba(0,0,0,0.15));
-}
-
-/* Melhor destaque para a seção de configuração das asas */
-.wing-config-section {
-    background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
-    border: 2px solid #bfdbfe;
-    border-radius: 12px;
-    padding: 24px;
-    margin: 16px 0;
-}
-
-.wing-config-title {
-    color: #1e40af;
-    font-weight: 600;
-    margin-bottom: 20px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.wing-config-title::before {
-    content: "✈️";
-    font-size: 1.2em;
-}
-
-/* Cards de informação das asas melhorados */
-.wing-info-card {
-    background: white;
-    border: 2px solid #e5e7eb;
-    border-radius: 12px;
-    padding: 16px;
-    margin-top: 12px;
-    transition: all 0.3s ease;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-}
-
-.wing-info-card:hover {
-    border-color: #3b82f6;
-    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
-    transform: translateY(-2px);
-}
-
-.wing-illustration {
-    width: 80px;
-    height: 80px;
-    object-fit: contain;
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
-    border-radius: 8px;
-    padding: 8px;
-    transition: all 0.3s ease;
-}
-
-.wing-illustration:hover {
-    transform: scale(1.1);
-    border-color: #3b82f6;
-    box-shadow: 0 4px 8px rgba(59, 130, 246, 0.2);
-}
-
-/* Melhorias para selects e inputs */
-select, input[type="number"], input[type="text"] {
-    transition: all 0.2s ease;
-}
-
-select:focus, input:focus {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
-}
-
-/* Definindo a coluna de resumo para ser um contêiner flexível que rola */
+/* Alterado: Definindo a coluna de resumo para ser um contêiner flexível que rola */
 @media (min-width: 1024px) {
     .lg\:grid-cols-3 {
         display: grid;
-        grid-template-columns: 2fr 1fr;
+        grid-template-columns: 2fr 1fr; /* Removido o espaço do meio para dar mais espaço ao resumo */
         gap: 2rem;
     }
     
     .lg\:col-span-1 {
         display: flex;
         flex-direction: column;
-        height: calc(100vh - 4rem);
-        overflow-y: auto;
+        height: calc(100vh - 4rem); /* Ajusta a altura da coluna para a altura da viewport menos o header/footer */
+        overflow-y: auto; /* Adiciona a barra de rolagem à coluna inteira */
     }
 
     .summary-panel {
-        position: static;
+        position: static; /* Garantir que o painel flua normalmente dentro da coluna */
         top: 0;
         max-height: none;
-        overflow-y: visible;
+        overflow-y: visible; /* A rolagem é gerenciada pelo contêiner pai */
     }
 }
+
 
 /* Custom scrollbar for summary panel */
 .summary-panel::-webkit-scrollbar { width: 6px; }
@@ -167,129 +74,3 @@ select:focus, input:focus {
 .status-ok { background: #dcfce7; color: #166534; border: 1px solid #a7f3d0; }
 .status-warning { background: #fefce8; color: #854d0e; border: 1px solid #fef08a; }
 .status-error { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
-
-/* Melhorias para o layout geral */
-.step-content {
-    padding: 24px;
-    background: white;
-}
-
-.section-divider {
-    height: 1px;
-    background: linear-gradient(to right, transparent, #e5e7eb, transparent);
-    margin: 24px 0;
-}
-
-/* Melhorias para os cards de informação */
-.info-card {
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
-    border-radius: 8px;
-    padding: 16px;
-    margin-top: 8px;
-    transition: all 0.2s ease;
-}
-
-.info-card:hover {
-    background: #f1f5f9;
-    border-color: #cbd5e1;
-}
-
-/* Animações suaves para transições */
-.fade-in {
-    animation: fadeIn 0.3s ease-in;
-}
-
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
-/* Melhorias para responsividade */
-@media (max-width: 768px) {
-    .wing-config-section {
-        padding: 16px;
-        margin: 12px 0;
-    }
-    
-    .wing-illustration {
-        width: 60px;
-        height: 60px;
-    }
-    
-    .grid-responsive {
-        grid-template-columns: 1fr;
-        gap: 16px;
-    }
-}
-
-/* Estados de hover para melhor UX */
-.hover-lift {
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.hover-lift:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-}
-
-/* Melhorias para os botões de seleção */
-.engine-choice-btn, .supercharger-choice-btn {
-    transition: all 0.2s ease;
-}
-
-.engine-choice-btn:hover, .supercharger-choice-btn:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-}
-
-.engine-choice-btn.selected, .supercharger-choice-btn.selected {
-    background: #dbeafe !important;
-    border-color: #3b82f6 !important;
-    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
-}
-
-/* Melhorias para acessibilidade */
-.focus-visible:focus {
-    outline: 2px solid #3b82f6;
-    outline-offset: 2px;
-}
-
-/* Tipografia melhorada */
-.section-title {
-    font-size: 1.125rem;
-    font-weight: 600;
-    color: #374151;
-    margin-bottom: 16px;
-}
-
-.subsection-title {
-    font-size: 1rem;
-    font-weight: 500;
-    color: #4b5563;
-    margin-bottom: 12px;
-}
-
-/* Loading states */
-.loading {
-    opacity: 0.6;
-    pointer-events: none;
-}
-
-.loading::after {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 20px;
-    height: 20px;
-    margin: -10px 0 0 -10px;
-    border: 2px solid #e5e7eb;
-    border-top-color: #3b82f6;
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-    to { transform: rotate(360deg); }
-}
