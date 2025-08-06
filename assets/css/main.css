@@ -37,6 +37,19 @@ body {
     border: 1px solid #e5e7eb;
 }
 
+/* Estilos para os novos botões de escolha */
+.choice-btn {
+    transition: all 0.2s ease-in-out;
+    cursor: pointer;
+}
+
+.choice-btn.selected {
+    border-color: #3b82f6; /* Cor azul para seleção */
+    background-color: #eff6ff; /* Fundo azul claro */
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.4);
+}
+
+
 /* Alterado: Definindo a coluna de resumo para ser um contêiner flexível que rola */
 @media (min-width: 1024px) {
     .lg\:grid-cols-3 {
