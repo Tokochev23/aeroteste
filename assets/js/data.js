@@ -40,17 +40,17 @@ export const gameData = {
             monoplane_cantilever: { name: "Monoplano Cantilever", cost_mod: 1.2, weight_mod: 1.0, drag_mod: 0.9, cl_max_mod: 1.0, cd_0_mod: 0.9, aspect_ratio_mod: 1.0, reliability_mod: 1.0, tech_level_required: 40, description: "Design limpo, menor arrasto, mas estrutura inicialmente mais pesada. Padrão para aeronaves modernas." },
             delta_wing: { name: "Asa Delta (Experimental)", cost_mod: 1.8, weight_mod: 1.05, drag_mod: 0.8, cl_max_mod: 0.9, cd_0_mod: 0.85, aspect_ratio_mod: 0.5, speed_mod: 1.1, maneuverability_mod: 0.8, reliability_mod: 0.85, tech_level_required: 90, description: "Alto desempenho em velocidade, bom para curvas de alta G em alta velocidade, mas péssimo manuseio em baixa velocidade. Tecnologia muito experimental para o período." }
         },
-        // NOVOS: Posição da Asa
+        // CORREÇÃO: Links das imagens atualizados para os URLs diretos dos arquivos SVG.
         wing_positions: {
             low_wing: {
                 name: "Asa Baixa",
                 description: "Asa montada na parte inferior da fuselagem. Melhor visibilidade superior, ideal para caças. Pode limitar o tamanho de bombas e canhões no centro.",
                 turn_mod: 1.15,
                 stability_mod: 0.95,
-                ground_clearance_penalty: true, // Implica limitações de armamento grande
+                ground_clearance_penalty: true,
                 bomb_capacity_mod: 0.8,
                 armament_limits: { cannon_30: 2, cannon_37: 1, cannon_at_40: 0, bomb_250: 4, bomb_500: 2, bomb_1000: 0, torpedo: 0 },
-                svg_url: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Monoplane_low.svg/200px-Monoplane_low.svg.png",
+                svg_url: "https://upload.wikimedia.org/wikipedia/commons/1/1a/Monoplane_low.svg",
                 tech_level_required: 40
             },
             mid_wing: {
@@ -58,9 +58,9 @@ export const gameData = {
                 description: "Asa atravessa o meio da fuselagem. Excelente para acrobacia e manobrabilidade. Pode dificultar a instalação de armamento na barriga.",
                 turn_mod: 1.20,
                 stability_mod: 0.90,
-                structure_weight_mod: 1.1, // Aumenta peso estrutural devido ao reforço na fuselagem
+                structure_weight_mod: 1.1,
                 armament_limits: { cannon_30: 4, cannon_37: 2, cannon_at_40: 1, bomb_250: 6, bomb_500: 3, bomb_1000: 1, torpedo: 0 },
-                svg_url: "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d4/Monoplane_mid.svg/200px-Monoplane_mid.svg.png",
+                svg_url: "https://upload.wikimedia.org/wikipedia/commons/d/d4/Monoplane_mid.svg",
                 tech_level_required: 50
             },
             shoulder_wing: {
@@ -70,7 +70,7 @@ export const gameData = {
                 stability_mod: 1.0,
                 cargo_capacity_mod: 1.1,
                 armament_limits: { cannon_30: 4, cannon_37: 2, cannon_at_40: 1, bomb_250: 8, bomb_500: 4, bomb_1000: 2, torpedo: 1 },
-                svg_url: "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6f/Monoplane_shoulder.svg/200px-Monoplane_shoulder.svg.png",
+                svg_url: "https://upload.wikimedia.org/wikipedia/commons/6/6f/Monoplane_shoulder.svg",
                 tech_level_required: 30
             },
             high_wing: {
@@ -81,7 +81,7 @@ export const gameData = {
                 bomb_capacity_mod: 1.2,
                 stall_recovery_mod: 1.1,
                 armament_limits: { cannon_30: 2, cannon_37: 1, cannon_at_40: 1, bomb_250: 10, bomb_500: 5, bomb_1000: 2, torpedo: 1 },
-                svg_url: "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a2/Monoplane_high.svg/200px-Monoplane_high.svg.png",
+                svg_url: "https://upload.wikimedia.org/wikipedia/commons/a/a2/Monoplane_high.svg",
                 tech_level_required: 20
             },
             parasol: {
@@ -89,24 +89,23 @@ export const gameData = {
                 description: "Asa suspensa acima da fuselagem. Máxima visibilidade, comum em aviões de observação. Geralmente para aeronaves mais leves.",
                 turn_mod: 0.75,
                 stability_mod: 1.2,
-                drag_mod: 1.15, // Maior arrasto devido aos suportes
+                drag_mod: 1.15,
                 visibility_bonus: true,
                 armament_limits: { mg_30: 4, mg_50: 2, cannon_20: 0, cannon_30: 0, bomb_50: 4, bomb_100: 2, bomb_250: 0, torpedo: 0 },
-                svg_url: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4e/Monoplane_parasol.svg/200px-Monoplane_parasol.svg.png",
+                svg_url: "https://upload.wikimedia.org/wikipedia/commons/4/4e/Monoplane_parasol.svg",
                 tech_level_required: 10
             },
-            biplane_wing_pos: { // Para biplanos, a "posição" é inerente
+            biplane_wing_pos: {
                 name: "Biplano",
                 description: "Duas asas para maior sustentação. Excelente manobrabilidade em baixa velocidade, mas alto arrasto.",
                 turn_mod: 1.3,
                 stability_mod: 1.0,
                 drag_mod: 1.2,
                 armament_limits: { mg_30: 8, mg_50: 4, cannon_20: 2, cannon_30: 0, bomb_50: 8, bomb_100: 4, bomb_250: 0, torpedo: 0 },
-                svg_url: "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d7/Biplane_wire.svg/200px-Biplane_wire.svg.png",
+                svg_url: "https://upload.wikimedia.org/wikipedia/commons/d/d7/Biplane_wire.svg",
                 tech_level_required: 0
             }
         },
-        // NOVOS: Formato da Asa
         wing_shapes: {
             elliptical: {
                 name: "Asa Elíptica",
@@ -115,8 +114,8 @@ export const gameData = {
                 drag_mod: 0.92,
                 cost_mod: 1.3,
                 manufacturing_complexity: "high",
-                armament_limits: { cannon_30: 2, cannon_37: 1, cannon_at_40: 0 }, // Pode ter limites em armamento muito grande devido ao formato
-                svg_url: "https://upload.wikimedia.org/wikipedia/commons/thumb/6/62/Wing_elliptical.svg/200px-Wing_elliptical.svg.png",
+                armament_limits: { cannon_30: 2, cannon_37: 1, cannon_at_40: 0 },
+                svg_url: "https://upload.wikimedia.org/wikipedia/commons/6/62/Wing_elliptical.svg",
                 tech_level_required: 70
             },
             tapered: {
@@ -126,7 +125,7 @@ export const gameData = {
                 drag_mod: 0.95,
                 cost_mod: 1.1,
                 armament_limits: { cannon_30: 4, cannon_37: 2, cannon_at_40: 1 },
-                svg_url: "https://upload.wikimedia.org/wikipedia/commons/thumb/8/87/Wing_tapered.svg/200px-Wing_tapered.svg.png",
+                svg_url: "https://upload.wikimedia.org/wikipedia/commons/8/87/Wing_tapered.svg",
                 tech_level_required: 50
             },
             constant_chord: {
@@ -137,7 +136,7 @@ export const gameData = {
                 cost_mod: 0.9,
                 manufacturing_complexity: "low",
                 armament_limits: { cannon_30: 2, cannon_37: 1, cannon_at_40: 1 },
-                svg_url: "https://upload.wikimedia.org/wikipedia/commons/thumb/2/23/Wing_constant.svg/200px-Wing_constant.svg.png",
+                svg_url: "https://upload.wikimedia.org/wikipedia/commons/2/23/Wing_constant.svg",
                 tech_level_required: 0
             },
             gull_wing: {
@@ -146,8 +145,8 @@ export const gameData = {
                 turn_mod: 0.9,
                 stability_mod: 1.05,
                 landing_gear_weight_mod: 0.85,
-                armament_limits: { bomb_500: 4, bomb_1000: 2, torpedo: 1 }, // Boa para bombas grandes
-                svg_url: "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f6/Monoplane_gull.svg/200px-Monoplane_gull.svg.png",
+                armament_limits: { bomb_500: 4, bomb_1000: 2, torpedo: 1 },
+                svg_url: "https://upload.wikimedia.org/wikipedia/commons/f/f6/Monoplane_gull.svg",
                 tech_level_required: 40
             },
             inverted_gull: {
@@ -157,7 +156,7 @@ export const gameData = {
                 propeller_clearance_bonus: true,
                 carrier_ops_bonus: true,
                 armament_limits: { cannon_30: 4, cannon_37: 2, cannon_at_40: 1 },
-                svg_url: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/30/Monoplane_inverted_gull.svg/200px-Monoplane_inverted_gull.svg.png",
+                svg_url: "https://upload.wikimedia.org/wikipedia/commons/3/30/Monoplane_inverted_gull.svg",
                 tech_level_required: 60
             }
         },
@@ -167,7 +166,7 @@ export const gameData = {
             skis: { name: "Esquis", cost: 5000, weight: 80, metal_cost: 100, drag_mod: 1.12, reliability_mod: 1.0, tech_level_required: 0, description: "Permite operações em superfícies nevadas ou geladas. Aumenta o arrasto." },
             floats: { name: "Flutuadores", cost: 15000, weight: 300, metal_cost: 200, drag_mod: 1.20, reliability_mod: 1.0, tech_level_required: 0, description: "Permite pousos e decolagens na água. Aumenta significativamente o peso e o arrasto." }
         },
-        // NOVOS: Tipos de Motor
+        // CORREÇÃO: Removidas as outras opções de motor, deixando apenas Radial e V/Em Linha.
         engineTypes: {
             radial: {
                 name: "Motor Radial",
@@ -214,6 +213,7 @@ export const gameData = {
                 weight: 600,
                 metal_cost: 2500
             },
+            /*
             rotary: {
                 name: "Motor Rotativo",
                 description: "Motor inteiro gira com a hélice. Tecnologia da WWI, leve mas problemático. Melhor para aviões de treino baratos, países sem tecnologia, nostalgia.",
@@ -279,6 +279,7 @@ export const gameData = {
                 weight: 1200,
                 metal_cost: 6000
             }
+            */
         },
         propellers: {
             wood_2: { name: "Madeira 2 pás", cost: 1000, weight: 30, metal_cost: 20, efficiency: 0.75, reliability_mod: 1.05, tech_level_required: 0, description: "Simples e leve. Ineficiente em altas velocidades e altitudes." },
@@ -295,7 +296,6 @@ export const gameData = {
             carburetor: { name: "Carburador", cost: 0, weight: 0, reliability_mod: 1.0, performance_mod: 1.0, tech_level_required: 0, description: "Simples e barato. Propenso a congelamento e falha em manobras G negativas." },
             injection: { name: "Injeção de Combustível", cost: 12000, weight: 20, reliability_mod: 1.05, performance_mod: 1.07, tech_level_required: 60, description: "Fornece combustível de forma precisa e confiável em qualquer atitude de voo. Aumenta a performance, mas é uma tecnologia cara e avançada." }
         },
-        // NOVOS: Tipos de Sobrealimentador
         superchargerTypes: {
             none: {
                 name: "Aspiração Natural",
