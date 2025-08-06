@@ -123,22 +123,22 @@ export class TemplateManager {
             'fighter_light': {
                 name: 'Caça Leve Padrão',
                 description: 'Configuração balanceada para agilidade.',
-                config: { aircraft_type: 'light_fighter', engine_type: 'v12', engine_power: 1000, num_engines: 1, structure_type: 'all_metal', wing_type: 'monoplane_cantilever', landing_gear_type: 'retractable_gear', propeller_type: 'metal_3', cooling_system: 'liquid', fuel_feed: 'carburetor', supercharger: 'single_stage', mg_50: 2, cannon_20: 2, enclosed_cockpit: true, radio_hf: true, pilot_armor: true }
+                config: { aircraft_type: 'light_fighter', wing_position: 'low_wing', wing_shape: 'elliptical', mg_50: 2, cannon_20: 2, enclosed_cockpit: true, radio_hf: true, pilot_armor: true }
             },
             'fighter_heavy': {
                 name: 'Caça Pesado/Interceptor',
                 description: 'Configuração para interceptação de bombardeiros.',
-                config: { aircraft_type: 'heavy_fighter', engine_type: 'radial_18', engine_power: 1500, num_engines: 2, structure_type: 'duralumin', wing_type: 'monoplane_cantilever', landing_gear_type: 'retractable_gear', propeller_type: 'adjustable', cooling_system: 'air', fuel_feed: 'injection', supercharger: 'two_stage', mg_50: 4, cannon_20: 2, pilot_armor: true, engine_armor: true, enclosed_cockpit: true, oxygen_system: true, radio_hf: true }
+                config: { aircraft_type: 'heavy_fighter', wing_position: 'mid_wing', wing_shape: 'tapered', mg_50: 4, cannon_20: 2, pilot_armor: true, engine_armor: true, enclosed_cockpit: true, oxygen_system: true, radio_hf: true }
             },
             'bomber_tactical': {
                 name: 'Bombardeiro Tático',
                 description: 'Configuração para bombardeio médio.',
-                config: { aircraft_type: 'tactical_bomber', engine_type: 'radial_16', engine_power: 1400, num_engines: 2, structure_type: 'all_metal', wing_type: 'monoplane_cantilever', landing_gear_type: 'retractable_gear', propeller_type: 'adjustable', cooling_system: 'air', fuel_feed: 'carburetor', supercharger: 'single_stage', bomb_250: 4, bomb_100: 8, defensive_turret_type: 'powered_turret', defensive_mg_50: 2, pilot_armor: true, self_sealing_tanks: true, enclosed_cockpit: true, oxygen_system: true, radio_hf: true, basic_bomb_sight: true }
+                config: { aircraft_type: 'tactical_bomber', wing_position: 'shoulder_wing', wing_shape: 'constant_chord', bomb_250: 4, bomb_100: 8, defensive_turret_type: 'powered_turret', defensive_mg_50: 2, pilot_armor: true, self_sealing_tanks: true, enclosed_cockpit: true, oxygen_system: true, radio_hf: true, basic_bomb_sight: true }
             },
             'cas_ground': {
                 name: 'Apoio Aéreo Próximo',
                 description: 'Configuração para CAS resistente.',
-                config: { aircraft_type: 'cas', engine_type: 'radial_18', engine_power: 1800, num_engines: 1, structure_type: 'all_metal', wing_type: 'monoplane_cantilever', landing_gear_type: 'fixed_gear', propeller_type: 'metal_3', cooling_system: 'air', fuel_feed: 'carburetor', supercharger: 'none', cannon_37: 1, bomb_100: 6, rockets: 8, pilot_armor: true, engine_armor: true, self_sealing_tanks: true, enclosed_cockpit: true, radio_hf: true, dive_brakes: true }
+                config: { aircraft_type: 'cas', wing_position: 'high_wing', wing_shape: 'constant_chord', cannon_37: 1, bomb_100: 6, rockets: 8, pilot_armor: true, engine_armor: true, self_sealing_tanks: true, enclosed_cockpit: true, radio_hf: true, dive_brakes: true }
             }
         };
     }
@@ -182,7 +182,16 @@ export class TemplateManager {
                 else element.value = value;
             }
         });
-        updateCalculations(); // Recalcula após aplicar o template
+        
+        // Só chama updateCalculations se estiver disponível (evita erro de inicialização)
+        if (typeof updateCalculations === 'function') {
+            try {
+                updateCalculations();
+            } catch (error) {
+                console.warn('Erro ao atualizar cálculos após aplicar template:', error);
+            }
+        }
+        
         return true;
     }
 }
@@ -194,24 +203,40 @@ export class TemplateManager {
 export class AutoSaveManager {
     constructor(saveInterval = 5000) {
         this.saveInterval = saveInterval;
-        this.lastSaveData = null; // Armazena a última string JSON salva para evitar salvamentos redundantes
+        this.lastSaveData = null;
         this.saveTimer = null;
-        this.init();
+        this.isInitialized = false; // Flag para controlar se foi inicializado
     }
 
     /**
-     * Inicializa o auto-salvamento, carregando dados anteriores e iniciando o timer.
+     * Inicializa o auto-salvamento. Deve ser chamado após todas as dependências estarem prontas.
      */
     init() {
+        if (this.isInitialized) return; // Previne dupla inicialização
+        
         this.loadAutoSave();
         this.startAutoSave();
+        this.isInitialized = true;
     }
 
     /**
      * Inicia o timer de auto-salvamento.
      */
     startAutoSave() {
+        if (this.saveTimer) {
+            clearInterval(this.saveTimer);
+        }
         this.saveTimer = setInterval(() => this.autoSave(), this.saveInterval);
+    }
+
+    /**
+     * Para o auto-salvamento.
+     */
+    stopAutoSave() {
+        if (this.saveTimer) {
+            clearInterval(this.saveTimer);
+            this.saveTimer = null;
+        }
     }
 
     /**
@@ -220,12 +245,16 @@ export class AutoSaveManager {
      */
     getCurrentFormData() {
         const data = {};
-        document.querySelectorAll('input, select').forEach(element => {
-            if (element.id) {
-                if (element.type === 'checkbox') data[element.id] = element.checked;
-                else data[element.id] = element.value;
-            }
-        });
+        try {
+            document.querySelectorAll('input, select').forEach(element => {
+                if (element.id) {
+                    if (element.type === 'checkbox') data[element.id] = element.checked;
+                    else data[element.id] = element.value;
+                }
+            });
+        } catch (error) {
+            console.warn('Erro ao obter dados do formulário:', error);
+        }
         return data;
     }
 
@@ -233,12 +262,17 @@ export class AutoSaveManager {
      * Salva os dados do formulário no localStorage se houver mudanças.
      */
     autoSave() {
-        const currentData = this.getCurrentFormData();
-        const dataString = JSON.stringify(currentData);
-        if (dataString !== this.lastSaveData) {
-            localStorage.setItem('aircraft_autosave', dataString);
-            this.lastSaveData = dataString;
-            // console.log("Dados salvos automaticamente."); // Para depuração
+        if (!this.isInitialized) return; // Não salva se não foi inicializado
+        
+        try {
+            const currentData = this.getCurrentFormData();
+            const dataString = JSON.stringify(currentData);
+            if (dataString !== this.lastSaveData) {
+                localStorage.setItem('aircraft_autosave', dataString);
+                this.lastSaveData = dataString;
+            }
+        } catch (error) {
+            console.warn('Erro durante auto-salvamento:', error);
         }
     }
 
@@ -249,8 +283,8 @@ export class AutoSaveManager {
         const saved = localStorage.getItem('aircraft_autosave');
         if (saved) {
             try {
-                this.restoreFormData(JSON.parse(saved));
-                // console.log("Dados de auto-salvamento carregados."); // Para depuração
+                const data = JSON.parse(saved);
+                this.restoreFormData(data);
             } catch (e) {
                 console.error("Erro ao parsear dados de auto-salvamento:", e);
                 localStorage.removeItem('aircraft_autosave'); // Limpa dados corrompidos
@@ -263,14 +297,37 @@ export class AutoSaveManager {
      * @param {object} data - O objeto de dados a ser restaurado.
      */
     restoreFormData(data) {
-        Object.entries(data).forEach(([id, value]) => {
-            const element = document.getElementById(id);
-            if (element) {
-                if (element.type === 'checkbox') element.checked = Boolean(value);
-                else element.value = value;
+        try {
+            Object.entries(data).forEach(([id, value]) => {
+                const element = document.getElementById(id);
+                if (element) {
+                    if (element.type === 'checkbox') element.checked = Boolean(value);
+                    else element.value = value;
+                }
+            });
+            
+            // Só tenta recalcular se updateCalculations estiver disponível e seguro de chamar
+            if (typeof updateCalculations === 'function') {
+                // Adiciona um pequeno delay para garantir que tudo esteja inicializado
+                setTimeout(() => {
+                    try {
+                        updateCalculations();
+                    } catch (error) {
+                        console.warn('Erro ao recalcular após restaurar dados:', error);
+                    }
+                }, 100);
             }
-        });
-        updateCalculations(); // Recalcula após restaurar os dados
+        } catch (error) {
+            console.error('Erro ao restaurar dados do formulário:', error);
+        }
+    }
+
+    /**
+     * Limpa os dados de auto-salvamento.
+     */
+    clearAutoSave() {
+        localStorage.removeItem('aircraft_autosave');
+        this.lastSaveData = null;
     }
 }
 
@@ -282,10 +339,29 @@ export class KeyboardManager {
     constructor(stateManagerInstance, autoSaveManagerInstance) {
         this.stateManager = stateManagerInstance;
         this.autoSaveManager = autoSaveManagerInstance;
+        this.setupKeyboardListeners();
+    }
+
+    /**
+     * Configura os listeners de teclado.
+     */
+    setupKeyboardListeners() {
         document.addEventListener('keydown', (e) => {
-            if (e.ctrlKey && e.key.toLowerCase() === 'z') { e.preventDefault(); this.undo(); }
-            if (e.ctrlKey && e.key.toLowerCase() === 'y') { e.preventDefault(); this.redo(); }
-            if (e.ctrlKey && e.key.toLowerCase() === 'g') { e.preventDefault(); /* generateSheet(); */ } // generateSheet é chamada via UI
+            // Só processa se não estiver em um campo de input
+            if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+                if (e.ctrlKey && e.key.toLowerCase() === 'z') { 
+                    e.preventDefault(); 
+                    this.undo(); 
+                }
+                if (e.ctrlKey && e.key.toLowerCase() === 'y') { 
+                    e.preventDefault(); 
+                    this.redo(); 
+                }
+                if (e.ctrlKey && e.key.toLowerCase() === 'g') { 
+                    e.preventDefault(); 
+                    // generateSheet seria chamado via UI, não aqui
+                }
+            }
         });
     }
 
@@ -293,22 +369,52 @@ export class KeyboardManager {
      * Chama a função de desfazer do StateManager e restaura o formulário.
      */
     undo() {
-        const prevState = this.stateManager.undo();
-        if (prevState) this.autoSaveManager.restoreFormData(prevState);
+        try {
+            const prevState = this.stateManager.undo();
+            if (prevState && this.autoSaveManager.isInitialized) {
+                this.autoSaveManager.restoreFormData(prevState);
+            }
+        } catch (error) {
+            console.warn('Erro ao desfazer:', error);
+        }
     }
 
     /**
      * Chama a função de refazer do StateManager e restaura o formulário.
      */
     redo() {
-        const nextState = this.stateManager.redo();
-        if (nextState) this.autoSaveManager.restoreFormData(nextState);
+        try {
+            const nextState = this.stateManager.redo();
+            if (nextState && this.autoSaveManager.isInitialized) {
+                this.autoSaveManager.restoreFormData(nextState);
+            }
+        } catch (error) {
+            console.warn('Erro ao refazer:', error);
+        }
     }
 }
 
-// --- INSTÂNCIAS GLOBAIS (serão exportadas e inicializadas em main.js) ---
+// --- INSTÂNCIAS GLOBAIS ---
+// REMOVIDAS daqui - serão criadas e inicializadas em main.js na ordem correta
 export const stateManager = new StateManager();
 export const templateManager = new TemplateManager();
-export const autoSaveManager = new AutoSaveManager();
-export const keyboardManager = new KeyboardManager(stateManager, autoSaveManager);
 
+// AutoSaveManager e KeyboardManager serão criados em main.js após a inicialização completa
+export let autoSaveManager = null;
+export let keyboardManager = null;
+
+/**
+ * Inicializa os managers que dependem de outras partes da aplicação.
+ * Deve ser chamado após todas as dependências estarem prontas.
+ */
+export function initializeManagers() {
+    if (!autoSaveManager) {
+        autoSaveManager = new AutoSaveManager();
+    }
+    if (!keyboardManager) {
+        keyboardManager = new KeyboardManager(stateManager, autoSaveManager);
+    }
+    
+    // Inicializa o AutoSaveManager apenas agora
+    autoSaveManager.init();
+}
