@@ -4,12 +4,21 @@ import { loadGameDataFromSheets, gameData } from './data.js';
 import { updateCalculations } from './calculations.js';
 import { 
     toggleStep, generateSheet, initializeChoiceButtons, populateWingDropdowns, 
-    applyTechLevelRestrictions, populateEngineTypeSelection, setProductionLock 
+    applyTechLevelRestrictions, setProductionLock, updateUI, updateProgress
 } from './ui.js';
 import { debounce, stateManager, templateManager, initializeManagers } from './managers.js';
 
-const debouncedUpdateCalculations = debounce(updateCalculations, 250);
 let isAppInitialized = false;
+
+// Função "maestro" que calcula e depois atualiza a UI
+function performUpdateAndRefreshUI() {
+    if (!isAppInitialized) return;
+    const performanceData = updateCalculations();
+    updateUI(performanceData); // updateUI pode lidar com 'null' se os cálculos falharem
+    updateProgress();
+}
+
+const debouncedPerformUpdate = debounce(performUpdateAndRefreshUI, 250);
 
 window.onload = async function() {
     try {
@@ -20,10 +29,11 @@ window.onload = async function() {
         initializeManagers();
         attachEventListeners();
         
-        // Trigger initial calculation after everything is set up
+        // Trigger inicialização
         setTimeout(() => {
             isAppInitialized = true;
-            console.log("Application Initialized. Performing first calculation.");
+            console.log("Application Initialized. Performing first setup.");
+            // Simula um evento de 'change' para carregar as restrições de tecnologia iniciais
             handleCountryChange({ target: document.getElementById('country_doctrine') });
         }, 100);
 
@@ -40,14 +50,20 @@ function setupBasicUI() {
 }
 
 function attachEventListeners() {
-    document.querySelectorAll('input, select').forEach(element => {
-        if (['aircraft_name', 'quantity'].includes(element.id)) {
-            element.addEventListener('input', updateCalculations);
-        } else {
-            element.addEventListener('input', debouncedUpdateCalculations);
-        }
-        element.addEventListener('change', updateCalculations);
-    });
+    // Delegação de eventos para performance
+    const formContainer = document.querySelector('.lg\\:col-span-2');
+    if (formContainer) {
+        formContainer.addEventListener('input', (event) => {
+            if (event.target.matches('input, select')) {
+                debouncedPerformUpdate();
+            }
+        });
+        formContainer.addEventListener('change', (event) => {
+             if (event.target.matches('input, select')) {
+                performUpdateAndRefreshUI();
+            }
+        });
+    }
 
     document.querySelectorAll('.step-header').forEach(header => {
         header.addEventListener('click', (event) => toggleStep(parseInt(event.currentTarget.dataset.step)));
@@ -59,7 +75,6 @@ function attachEventListeners() {
 }
 
 function handleCountryChange(event) {
-    if (!isAppInitialized && event.target.value === 'loading') return;
     const countryName = event.target.value;
     if (countryName && gameData.countries?.[countryName]) {
         const countryData = gameData.countries[countryName];
@@ -67,13 +82,13 @@ function handleCountryChange(event) {
         applyTechLevelRestrictions(techLevel);
         document.getElementById('country_bonus_note').textContent = `Nível Aeronáutico: ${techLevel} | Capacidade: ${countryData.production_capacity?.toLocaleString('pt-BR') || 'N/A'}`;
     }
-    updateCalculations();
+    performUpdateAndRefreshUI();
 }
 
 function handleProductionTurnChange(event) {
     const turns = parseInt(event.target.value) || 0;
     setProductionLock(turns > 0);
-    updateCalculations();
+    performUpdateAndRefreshUI();
 }
 
 function showInitializationError(error) {
