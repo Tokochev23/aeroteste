@@ -403,3 +403,27 @@ export function setProductionLock(isLocked) {
         }
     });
 }
+
+// Adicionando a exportação que faltava
+export async function updateProgress() {
+    const { getCurrentSelections } = await import('./calculations.js');
+    const { selectedEngineType, selectedSuperchargerType } = getCurrentSelections();
+    
+    const requiredFields = ['aircraft_name', 'country_doctrine', 'air_doctrine', 'aircraft_type', 'wing_shape'];
+    let completedFields = 0;
+    requiredFields.forEach(id => {
+        const field = document.getElementById(id);
+        if (field && field.value && field.value !== '' && field.value !== 'loading') completedFields++;
+    });
+
+    if (selectedEngineType) completedFields++;
+    if (selectedSuperchargerType) completedFields++;
+
+    const totalFields = requiredFields.length + 2; // + engine and supercharger
+    const progress = (completedFields / totalFields) * 100;
+
+    const progressBar = document.getElementById('progress_bar');
+    if (progressBar) {
+        progressBar.style.width = `${progress}%`;
+    }
+}
