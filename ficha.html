@@ -12,7 +12,7 @@
     <style>
         body { font-family: 'Inter', sans-serif; }
         .card-collapse { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; }
-        .card-collapse.expanded { max-height: 1000px; } /* Um valor grande o suficiente para o conteúdo */
+        .card-collapse.expanded { max-height: 1000px; }
         .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
         .chart-container { position: relative; height: 200px; width: 100%; }
         .floating-action { position: fixed; bottom: 20px; right: 20px; z-index: 50; }
@@ -20,8 +20,8 @@
         #aircraft_image {
             width: 100%;
             height: 192px; /* h-48 */
-            object-fit: contain; /* Evita que a imagem seja cortada */
-            background-color: #f3f4f6; /* Cor de fundo para caso a imagem não preencha tudo */
+            object-fit: contain;
+            background-color: #f3f4f6;
         }
     </style>
 </head>
@@ -34,7 +34,6 @@
                 <p id="aircraft_subtitle" class="text-sm opacity-90">Tipo - Doutrina</p>
             </div>
             
-            <!-- Aircraft Image -->
             <div class="p-4">
                 <div class="relative bg-gray-100 rounded-xl overflow-hidden mb-3">
                     <img id="aircraft_image" src="https://placehold.co/400x250/5F9EA0/ffffff?text=AERONAVE" 
@@ -45,7 +44,6 @@
                     </button>
                 </div>
                 
-                <!-- Quick Stats -->
                 <div class="stats-grid text-sm">
                     <div class="bg-blue-50 p-2 rounded-lg text-center">
                         <div class="text-blue-600 font-semibold" id="unit_cost">$0</div>
@@ -76,7 +74,7 @@
                 </div>
                 <i class="fas fa-chevron-down transform transition-transform" id="performance_card_icon"></i>
             </button>
-            <div id="performance_card" class="card-collapse expanded"> <!-- Expanded by default -->
+            <div id="performance_card" class="card-collapse expanded">
                 <div class="p-4">
                     <div class="chart-container">
                         <canvas id="performanceChart"></canvas>
@@ -94,7 +92,7 @@
                 </div>
                 <i class="fas fa-chevron-down transform transition-transform" id="stats_card_icon"></i>
             </button>
-            <div id="stats_card" class="card-collapse expanded"> <!-- Expanded by default -->
+            <div id="stats_card" class="card-collapse expanded">
                 <div class="p-4 space-y-3">
                     <div class="grid grid-cols-2 gap-3 text-sm">
                         <div class="flex justify-between p-2 bg-gray-50 rounded">
@@ -135,7 +133,7 @@
                 </div>
                 <i class="fas fa-chevron-down transform transition-transform" id="armament_card_icon"></i>
             </button>
-            <div id="armament_card" class="card-collapse expanded"> <!-- Expanded by default -->
+            <div id="armament_card" class="card-collapse expanded">
                 <div class="p-4 space-y-3">
                     <div>
                         <span class="text-sm font-medium text-gray-600">Ofensivo:</span>
@@ -158,132 +156,28 @@
                 </div>
                 <i class="fas fa-chevron-down transform transition-transform" id="design_card_icon"></i>
             </button>
-            <div id="design_card" class="card-collapse expanded"> <!-- Expanded by default -->
+            <div id="design_card" class="card-collapse expanded">
                 <div class="p-4 space-y-3 text-sm">
-                    <div class="border-b pb-2">
-                        <span class="font-medium text-gray-700">Tipo:</span>
-                        <span id="aircraft_type" class="ml-2">-</span>
-                    </div>
-                    <div class="border-b pb-2">
-                        <span class="font-medium text-gray-700">Estrutura:</span>
-                        <span id="structure_type" class="ml-2">-</span>
-                    </div>
-                    <div class="border-b pb-2">
-                        <span class="font-medium text-gray-700">Asa (Tipo):</span>
-                        <span id="wing_type" class="ml-2">-</span>
-                    </div>
-                    <div class="border-b pb-2">
-                        <span class="font-medium text-gray-700">Asa (Posição):</span>
-                        <span id="wing_position" class="ml-2">-</span>
-                    </div>
-                    <div class="border-b pb-2">
-                        <span class="font-medium text-gray-700">Asa (Formato):</span>
-                        <span id="wing_shape" class="ml-2">-</span>
-                    </div>
-                    <div class="border-b pb-2">
-                        <span class="font-medium text-gray-700">Motor (Tipo):</span>
-                        <span id="engine_type_display" class="ml-2">-</span>
-                    </div>
-                    <div class="border-b pb-2">
-                        <span class="font-medium text-gray-700">Sobrealimentação:</span>
-                        <span id="supercharger_type_display" class="ml-2">-</span>
-                    </div>
-                    <div class="border-b pb-2">
-                        <span class="font-medium text-gray-700">Hélice Sugerida:</span>
-                        <span id="propeller_type_display" class="ml-2">-</span>
-                    </div>
-                    <div class="border-b pb-2">
-                        <span class="font-medium text-gray-700">Refrigeração Sugerida:</span>
-                        <span id="cooling_system_display" class="ml-2">-</span>
-                    </div>
-                    <div class="border-b pb-2">
-                        <span class="font-medium text-gray-700">Alimentação Sugerida:</span>
-                        <span id="fuel_feed_display" class="ml-2">-</span>
-                    </div>
-                    <div>
-                        <span class="font-medium text-gray-700">Trem de Pouso:</span>
-                        <span id="landing_gear_type" class="ml-2">-</span>
-                    </div>
+                    <div class="border-b pb-2"><span class="font-medium text-gray-700">Estrutura:</span> <span id="structure_type" class="ml-2">-</span></div>
+                    <div class="border-b pb-2"><span class="font-medium text-gray-700">Asa (Tipo):</span> <span id="wing_type" class="ml-2">-</span></div>
+                    <div class="border-b pb-2"><span class="font-medium text-gray-700">Asa (Formato):</span> <span id="wing_shape" class="ml-2">-</span></div>
+                    <div class="border-b pb-2"><span class="font-medium text-gray-700">Motor:</span> <span id="engine_type_display" class="ml-2">-</span></div>
+                    <div class="border-b pb-2"><span class="font-medium text-gray-700">Sobrealimentação:</span> <span id="supercharger_type_display" class="ml-2">-</span></div>
+                    <div class="border-b pb-2"><span class="font-medium text-gray-700">Hélice:</span> <span id="propeller_type_display" class="ml-2">-</span></div>
+                    <div class="border-b pb-2"><span class="font-medium text-gray-700">Refrigeração:</span> <span id="cooling_system_display" class="ml-2">-</span></div>
+                    <div><span class="font-medium text-gray-700">Trem de Pouso:</span> <span id="landing_gear_type" class="ml-2">-</span></div>
                 </div>
             </div>
         </div>
 
         <!-- Equipment Cards Grid -->
-        <div class="grid grid-cols-2 gap-3 mb-20">
-            <!-- Wings & Engine -->
+        <div class="grid grid-cols-1 gap-3 mb-20">
             <div class="bg-white rounded-xl shadow-lg overflow-hidden">
-                <button class="w-full p-3 text-left bg-gradient-to-r from-amber-50 to-amber-100 toggle-card-btn" data-card="wings_engine_card">
-                    <div class="flex items-center justify-between">
-                        <div class="flex items-center">
-                            <i class="fas fa-feather text-amber-600 mr-2 text-sm"></i>
-                            <span class="font-medium text-sm">Asas & Motor</span>
-                        </div>
-                        <i class="fas fa-chevron-down text-xs transform transition-transform" id="wings_engine_card_icon"></i>
-                    </div>
-                </button>
-                <div id="wings_engine_card" class="card-collapse expanded"> <!-- Expanded by default -->
-                    <div class="p-3 text-xs space-y-2">
-                        <div>
-                            <span class="font-medium text-gray-600">Asas:</span>
-                            <div id="wing_features" class="mt-1 text-gray-700"></div>
-                        </div>
-                        <div>
-                            <span class="font-medium text-gray-600">Motor:</span>
-                            <div id="engine_enhancements" class="mt-1 text-gray-700"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Protection & Cockpit -->
-            <div class="bg-white rounded-xl shadow-lg overflow-hidden">
-                <button class="w-full p-3 text-left bg-gradient-to-r from-emerald-50 to-emerald-100 toggle-card-btn" data-card="protection_cockpit_card">
-                    <div class="flex items-center justify-between">
-                        <div class="flex items-center">
-                            <i class="fas fa-shield text-emerald-600 mr-2 text-sm"></i>
-                            <span class="font-medium text-sm">Proteção & Cockpit</span>
-                        </div>
-                        <i class="fas fa-chevron-down text-xs transform transition-transform" id="protection_cockpit_card_icon"></i>
-                    </div
-                </button>
-                <div id="protection_cockpit_card" class="card-collapse expanded"> <!-- Expanded by default -->
-                    <div class="p-3 text-xs space-y-2">
-                        <div>
-                            <span class="font-medium text-gray-600">Proteção:</span>
-                            <div id="protection" class="mt-1 text-gray-700"></div>
-                        </div>
-                        <div>
-                            <span class="font-medium text-gray-600">Cockpit:</span>
-                            <div id="cockpit_comfort" class="mt-1 text-gray-700"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Avionics & Equipment -->
-            <div class="bg-white rounded-xl shadow-lg overflow-hidden col-span-2">
-                <button class="w-full p-3 text-left bg-gradient-to-r from-cyan-50 to-cyan-100 toggle-card-btn" data-card="avionics_equipment_card">
-                    <div class="flex items-center justify-between">
-                        <div class="flex items-center">
-                            <i class="fas fa-satellite-dish text-cyan-600 mr-2 text-sm"></i>
-                            <span class="font-medium text-sm">Aviônicos & Equipamentos</span>
-                        </div>
-                        <i class="fas fa-chevron-down text-xs transform transition-transform" id="avionics_equipment_card_icon"></i>
-                    </div>
-                </button>
-                <div id="avionics_equipment_card" class="card-collapse expanded"> <!-- Expanded by default -->
-                    <div class="p-3 text-xs space-y-2">
-                        <div class="grid grid-cols-2 gap-3">
-                            <div>
-                                <span class="font-medium text-gray-600">Aviônicos:</span>
-                                <div id="advanced_avionics" class="mt-1 text-gray-700"></div>
-                            </div>
-                            <div>
-                                <span class="font-medium text-gray-600">Equipamentos:</span>
-                                <div id="equipment" class="mt-1 text-gray-700"></div>
-                            </div>
-                        </div>
-                    </div>
+                 <div class="p-3 text-xs space-y-2">
+                    <div><span class="font-medium text-gray-600">Proteção:</span><div id="protection" class="mt-1 text-gray-700"></div></div>
+                    <div><span class="font-medium text-gray-600">Cockpit:</span><div id="cockpit_comfort" class="mt-1 text-gray-700"></div></div>
+                    <div><span class="font-medium text-gray-600">Aviônicos:</span><div id="advanced_avionics" class="mt-1 text-gray-700"></div></div>
+                    <div><span class="font-medium text-gray-600">Equipamentos:</span><div id="equipment" class="mt-1 text-gray-700"></div></div>
                 </div>
             </div>
         </div>
@@ -301,35 +195,23 @@
     <div id="image_modal" class="fixed inset-0 bg-black/50 z-50 hidden items-center justify-center p-4">
         <div class="bg-white rounded-2xl p-6 w-full max-w-sm">
             <h3 class="text-lg font-semibold mb-4">Alterar Imagem</h3>
-            
             <div class="space-y-4">
                 <div>
                     <label class="block text-sm font-medium mb-2">Upload de Imagem:</label>
-                    <input type="file" id="image_upload" accept="image/*" 
-                           class="w-full p-2 border rounded-lg text-sm">
+                    <input type="file" id="image_upload" accept="image/*" class="w-full p-2 border rounded-lg text-sm">
                 </div>
-                
                 <div>
                     <label class="block text-sm font-medium mb-2">Ou escolha uma aeronave:</label>
-                    <select id="aircraft_select" class="w-full p-2 border rounded-lg text-sm">
-                        <option value="">Selecione...</option>
-                    </select>
+                    <select id="aircraft_select" class="w-full p-2 border rounded-lg text-sm"><option value="">Selecione...</option></select>
                 </div>
             </div>
-            
             <div class="flex gap-3 mt-6">
-                <button id="apply-image-btn"
-                        class="flex-1 bg-blue-500 text-white py-2 rounded-lg font-medium hover:bg-blue-600 transition-colors">
-                    Aplicar
-                </button>
-                <button id="close-image-modal-btn"
-                        class="flex-1 bg-gray-300 text-gray-700 py-2 rounded-lg font-medium hover:bg-gray-400 transition-colors">
-                    Cancelar
-                </button>
+                <button id="apply-image-btn" class="flex-1 bg-blue-500 text-white py-2 rounded-lg font-medium hover:bg-blue-600 transition-colors">Aplicar</button>
+                <button id="close-image-modal-btn" class="flex-1 bg-gray-300 text-gray-700 py-2 rounded-lg font-medium hover:bg-gray-400 transition-colors">Cancelar</button>
             </div>
         </div>
     </div>
 
-    <script type="module" src="assets/js/main.js"></script>
+    <script type="module" src="assets/js/ficha.js"></script>
 </body>
 </html>
