@@ -1,7 +1,8 @@
 // assets/js/ui.js
 
 import { gameData, realWorldAircraft, techLevelRestrictions, engineSuperchargerCombos, designPenalties } from './data.js';
-import { updateCalculations, calculatePerformanceAtAltitude, calculateRateOfClimb, setCurrentSelections, findItemAcrossCategories } from './calculations.js';
+// CORREÇÃO: Adicionada a importação de 'getCurrentSelections'
+import { updateCalculations, calculatePerformanceAtAltitude, calculateRateOfClimb, setCurrentSelections, findItemAcrossCategories, getCurrentSelections } from './calculations.js';
 import { templateManager, stateManager } from './managers.js';
 
 let currentStep = 1;
@@ -47,7 +48,8 @@ function createChoiceButtons(containerId, hiddenSelectId, dataObject, formatter)
             if (hiddenSelectId === 'aircraft_type') {
                 populatePayloadStations();
             }
-            updateCalculations();
+            // Dispara o evento para o main.js orquestrar a atualização
+            document.body.dispatchEvent(new CustomEvent('design-update'));
         });
         container.appendChild(button);
     });
@@ -241,22 +243,19 @@ export function populateWingDropdowns() {
             }
             wingShapeSelect.appendChild(option);
         });
-        wingShapeSelect.addEventListener('change', updateCalculations);
     }
 }
 
 export function applyTechLevelRestrictions(techLevel) {
     gameData.currentCountryTechLevel = techLevel;
-    // Lógica para desabilitar/habilitar campos baseada na tecnologia
     populateWingDropdowns();
     populateEngineTypeSelection();
-    // Resetar seleções de motor
     setCurrentSelections(null, null);
     document.getElementById('engine-selected-info').classList.add('hidden');
     document.getElementById('supercharger-step').classList.add('opacity-50', 'pointer-events-none');
     document.getElementById('supercharger-selected-info').classList.add('hidden');
     document.getElementById('performance-sliders-step').classList.add('opacity-50', 'pointer-events-none');
-    updateCalculations();
+    document.body.dispatchEvent(new CustomEvent('design-update'));
 }
 
 export function populateEngineTypeSelection() {
@@ -291,7 +290,7 @@ function selectEngineType(engineKey) {
     populateSuperchargerSelection();
     
     document.getElementById('performance-sliders-step').classList.add('opacity-50', 'pointer-events-none');
-    updateCalculations();
+    document.body.dispatchEvent(new CustomEvent('design-update'));
 }
 
 export function populateSuperchargerSelection() {
@@ -326,7 +325,7 @@ function selectSuperchargerType(superchargerKey) {
     const comboLimits = engineSuperchargerCombos.calculateLimits(selectedEngineType, superchargerKey);
     document.getElementById('performance-sliders-step').classList.remove('opacity-50', 'pointer-events-none');
     updatePerformanceSliders(comboLimits);
-    updateCalculations();
+    document.body.dispatchEvent(new CustomEvent('design-update'));
 }
 
 export function updatePerformanceSliders(limits) {
@@ -353,7 +352,7 @@ export function updatePerformanceSliders(limits) {
 export function updateDesignConsequences() {
     document.getElementById('speed-value').textContent = `${document.getElementById('target-speed').value} km/h`;
     document.getElementById('range-value').textContent = `${document.getElementById('target-range').value} km`;
-    updateCalculations();
+    document.body.dispatchEvent(new CustomEvent('design-update'));
 }
 
 export function populatePayloadStations() {
@@ -385,8 +384,6 @@ export function populatePayloadStations() {
         `;
         container.appendChild(div);
     });
-    
-    document.querySelectorAll('.armament-select').forEach(sel => sel.addEventListener('change', updateCalculations));
 }
 
 export function setProductionLock(isLocked) {
@@ -404,7 +401,6 @@ export function setProductionLock(isLocked) {
     });
 }
 
-// Adicionando a exportação que faltava
 export async function updateProgress() {
     const { getCurrentSelections } = await import('./calculations.js');
     const { selectedEngineType, selectedSuperchargerType } = getCurrentSelections();
