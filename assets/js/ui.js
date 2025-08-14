@@ -1,12 +1,16 @@
 // assets/js/ui.js
 
 import { gameData, realWorldAircraft, techLevelRestrictions, engineSuperchargerCombos, designPenalties } from './data.js';
-// CORREÇÃO: Adicionada a importação de 'getCurrentSelections'
 import { updateCalculations, calculatePerformanceAtAltitude, calculateRateOfClimb, setCurrentSelections, findItemAcrossCategories, getCurrentSelections } from './calculations.js';
 import { templateManager, stateManager } from './managers.js';
 
 let currentStep = 1;
 let isLockedByProduction = false;
+
+// Função para criar o evento de atualização
+function dispatchDesignUpdate() {
+    document.body.dispatchEvent(new CustomEvent('design-update'));
+}
 
 function createChoiceButtons(containerId, hiddenSelectId, dataObject, formatter) {
     const container = document.getElementById(containerId);
@@ -48,8 +52,7 @@ function createChoiceButtons(containerId, hiddenSelectId, dataObject, formatter)
             if (hiddenSelectId === 'aircraft_type') {
                 populatePayloadStations();
             }
-            // Dispara o evento para o main.js orquestrar a atualização
-            document.body.dispatchEvent(new CustomEvent('design-update'));
+            dispatchDesignUpdate();
         });
         container.appendChild(button);
     });
@@ -91,11 +94,10 @@ function populateEquipmentListInUI(elementId, items, className = 'text-gray-700'
 
 export function updateUI(performance) {
     if (!performance) {
-        // Limpa a UI se não houver dados de performance
         const idsToClear = ['display_name', 'display_type', 'display_doctrine', 'unit_cost', 'base_unit_cost', 'learning_curve_discount_display', 'total_production_cost', 'total_metal_cost', 'total_weight', 'total_power', 'speed_max_sl', 'speed_max_alt', 'rate_of_climb', 'service_ceiling', 'max_range', 'turn_time', 'main_armament', 'reliability_display', 'country_production_capacity', 'producible_units', 'country_metal_balance', 'rated_altitude', 'manifold_pressure', 'suggested_propeller', 'suggested_cooling'];
         idsToClear.forEach(id => {
             const el = document.getElementById(id);
-            if (el) el.textContent = id.includes('cost') || id.includes('weight') || id.includes('power') ? '0' : '-';
+            if (el) el.textContent = id.includes('cost') || id.includes('weight') || id.includes('power') ? '0' : 'N/A';
         });
         document.getElementById('cg_indicator').style.left = '50%';
         document.getElementById('stress_bar').style.width = '0%';
@@ -104,12 +106,12 @@ export function updateUI(performance) {
         return;
     }
 
-    const { inputs, baseUnitCost, finalUnitCost, learningDiscount, combatWeight, totalEnginePower, finalSpeedKmhSL, finalSpeedKmhAlt, rate_of_climb_ms, finalServiceCeiling, finalRangeKm, turn_time_s, finalReliability, countryData, typeData, superchargerData, finalCg, currentStress, stressLimit, requiredFeatures } = performance;
+    const { inputs, baseUnitCost, finalUnitCost, learningDiscount, combatWeight, totalEnginePower, finalSpeedKmhSL, finalSpeedKmhAlt, rate_of_climb_ms, finalServiceCeiling, finalRangeKm, turn_time_s, finalReliability, countryData, typeData, superchargerData, finalCg, currentStress, stressLimit, requiredFeatures, offensiveArmamentTexts } = performance;
 
-    const formatNumber = (num) => num.toLocaleString('pt-BR', { maximumFractionDigits: 0 });
+    const formatNumber = (num) => num ? num.toLocaleString('pt-BR', { maximumFractionDigits: 0 }) : '0';
     
-    document.getElementById('display_name').textContent = inputs.aircraftName;
-    document.getElementById('display_type').textContent = typeData.name;
+    document.getElementById('display_name').textContent = inputs.aircraftName || 'Sem nome';
+    document.getElementById('display_type').textContent = typeData.name || '-';
     document.getElementById('display_doctrine').textContent = gameData.doctrines[inputs.selectedAirDoctrine]?.name || '-';
     
     document.getElementById('base_unit_cost').textContent = `£ ${formatNumber(baseUnitCost)}`;
@@ -127,9 +129,18 @@ export function updateUI(performance) {
     document.getElementById('max_range').textContent = `${formatNumber(finalRangeKm)} km`;
     document.getElementById('turn_time').textContent = `${turn_time_s.toFixed(1)} s`;
     document.getElementById('reliability_display').textContent = `${finalReliability.toFixed(1)}%`;
+    document.getElementById('main_armament').textContent = offensiveArmamentTexts.join(', ') || 'N/A';
+
+    // Country Data in Summary
+    if (countryData) {
+        document.getElementById('country_production_capacity').textContent = formatNumber(countryData.production_capacity);
+        const producibleUnits = finalUnitCost > 0 ? Math.floor(countryData.production_capacity / finalUnitCost) : 0;
+        document.getElementById('producible_units').textContent = formatNumber(producibleUnits);
+        document.getElementById('country_metal_balance').textContent = formatNumber(countryData.metal_balance);
+    }
 
     // CG Meter
-    const cgPercentage = (finalCg + 1) * 50; // Mapeia de -1 a 1 para 0% a 100%
+    const cgPercentage = (finalCg + 1) * 50;
     document.getElementById('cg_indicator').style.left = `calc(${Math.max(0, Math.min(100, cgPercentage))}% - 2px)`;
 
     // Stress Meter
@@ -140,12 +151,12 @@ export function updateUI(performance) {
     document.getElementById('stress_bar_label').textContent = `${stressPercentage.toFixed(0)}%`;
 
     // Engine Info
-    document.getElementById('rated_altitude').textContent = `${superchargerData.characteristics.rated_altitude_m} m`;
-    document.getElementById('manifold_pressure').textContent = `${superchargerData.characteristics.manifold_pressure_ata} ATA`;
+    if (superchargerData) {
+        document.getElementById('rated_altitude').textContent = `${superchargerData.characteristics.rated_altitude_m} m`;
+        document.getElementById('manifold_pressure').textContent = `${superchargerData.characteristics.manifold_pressure_ata} ATA`;
+    }
 
-    // Required Features
     populateEquipmentListInUI('required_features_summary', requiredFeatures, 'text-red-600');
-    
     updateStatusAndWarnings(performance);
 }
 
@@ -168,8 +179,6 @@ export function toggleStep(step) {
 export function generateSheet() {
     const performanceData = updateCalculations();
     if (performanceData) {
-        performanceData.aircraftImageSrc = document.getElementById('aircraft_image')?.src || '';
-        performanceData.performanceGraphData = generatePerformanceGraphData(performanceData);
         localStorage.setItem('aircraftSheetData', JSON.stringify(performanceData));
         window.open('ficha.html', '_blank');
     } else {
@@ -255,7 +264,7 @@ export function applyTechLevelRestrictions(techLevel) {
     document.getElementById('supercharger-step').classList.add('opacity-50', 'pointer-events-none');
     document.getElementById('supercharger-selected-info').classList.add('hidden');
     document.getElementById('performance-sliders-step').classList.add('opacity-50', 'pointer-events-none');
-    document.body.dispatchEvent(new CustomEvent('design-update'));
+    dispatchDesignUpdate();
 }
 
 export function populateEngineTypeSelection() {
@@ -271,7 +280,7 @@ export function populateEngineTypeSelection() {
         button.className = `engine-choice-btn p-3 border rounded-lg hover:bg-blue-50 transition-colors text-left bg-white border-gray-300 ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`;
         button.dataset.engine = key;
         button.disabled = isDisabled;
-        button.innerHTML = `<div class="font-bold text-gray-800">${engine.name}</div><div class="text-xs text-gray-600 mt-1">${engine.description}</div> ${isDisabled ? `<div class="text-red-500 text-xs mt-1">Tec. ${engine.tech_level_required}+</div>` : ''}`;
+        button.innerHTML = `<div class="font-bold text-gray-800">${engine.name}</div><div class="text-xs text-gray-600 mt-1">${engine.best_for}</div> ${isDisabled ? `<div class="text-red-500 text-xs mt-1">Tec. ${engine.tech_level_required}+</div>` : ''}`;
         button.addEventListener('click', () => selectEngineType(key));
         engineSelectionDiv.appendChild(button);
     });
@@ -283,14 +292,22 @@ function selectEngineType(engineKey) {
         return;
     }
     setCurrentSelections(engineKey, null);
+    const engine = gameData.components.engineTypes[engineKey];
+
     document.querySelectorAll('.engine-choice-btn').forEach(btn => btn.classList.remove('bg-blue-100', 'border-blue-500'));
     document.querySelector(`[data-engine="${engineKey}"]`).classList.add('bg-blue-100', 'border-blue-500');
     
+    // Mostra o painel de informações do motor
+    const infoDiv = document.getElementById('engine-selected-info');
+    document.getElementById('selected_engine_name').textContent = engine.name;
+    document.getElementById('selected_engine_description').textContent = engine.description;
+    infoDiv.classList.remove('hidden');
+
     document.getElementById('supercharger-step').classList.remove('opacity-50', 'pointer-events-none');
     populateSuperchargerSelection();
     
     document.getElementById('performance-sliders-step').classList.add('opacity-50', 'pointer-events-none');
-    document.body.dispatchEvent(new CustomEvent('design-update'));
+    dispatchDesignUpdate();
 }
 
 export function populateSuperchargerSelection() {
@@ -318,14 +335,21 @@ export function populateSuperchargerSelection() {
 
 function selectSuperchargerType(superchargerKey) {
     const { selectedEngineType } = getCurrentSelections();
+    const supercharger = gameData.components.superchargerTypes[superchargerKey];
     setCurrentSelections(selectedEngineType, superchargerKey);
+
     document.querySelectorAll('.supercharger-choice-btn').forEach(btn => btn.classList.remove('bg-blue-100', 'border-blue-500'));
     document.querySelector(`[data-supercharger="${superchargerKey}"]`).classList.add('bg-blue-100', 'border-blue-500');
     
+    const infoDiv = document.getElementById('supercharger-selected-info');
+    document.getElementById('selected_supercharger_name').textContent = supercharger.name;
+    document.getElementById('selected_supercharger_description').textContent = supercharger.description;
+    infoDiv.classList.remove('hidden');
+
     const comboLimits = engineSuperchargerCombos.calculateLimits(selectedEngineType, superchargerKey);
     document.getElementById('performance-sliders-step').classList.remove('opacity-50', 'pointer-events-none');
     updatePerformanceSliders(comboLimits);
-    document.body.dispatchEvent(new CustomEvent('design-update'));
+    dispatchDesignUpdate();
 }
 
 export function updatePerformanceSliders(limits) {
@@ -344,15 +368,13 @@ export function updatePerformanceSliders(limits) {
     document.getElementById('range-min').textContent = `Min: ${limits.range.min}`;
     document.getElementById('range-max').textContent = `Max: ${limits.range.max}`;
     
-    speedSlider.oninput = updateDesignConsequences;
-    rangeSlider.oninput = updateDesignConsequences;
     updateDesignConsequences();
 }
 
 export function updateDesignConsequences() {
     document.getElementById('speed-value').textContent = `${document.getElementById('target-speed').value} km/h`;
     document.getElementById('range-value').textContent = `${document.getElementById('target-range').value} km`;
-    document.body.dispatchEvent(new CustomEvent('design-update'));
+    dispatchDesignUpdate();
 }
 
 export function populatePayloadStations() {
@@ -367,7 +389,7 @@ export function populatePayloadStations() {
     container.innerHTML = '<h4 class="text-lg font-semibold text-gray-800 mb-3">📦 Estações de Carga (Payload)</h4>';
     aircraftType.payload_stations.forEach(station => {
         const div = document.createElement('div');
-        div.className = 'p-3 bg-gray-50 rounded-lg border';
+        div.className = 'p-3 bg-gray-50 rounded-lg border grid grid-cols-1 md:grid-cols-2 gap-4 items-end';
         
         let optionsHtml = '<option value="empty">Vazio</option>';
         Object.entries(gameData.components.armaments).forEach(([armKey, arm]) => {
@@ -377,10 +399,16 @@ export function populatePayloadStations() {
         });
 
         div.innerHTML = `
-            <label class="block text-sm font-medium text-gray-700">${station.name} (Max: ${station.max_weight_kg} kg)</label>
-            <select data-station="${station.id}" class="armament-select w-full mt-1 p-2 border border-gray-300 rounded-lg">
-                ${optionsHtml}
-            </select>
+            <div>
+                <label class="block text-sm font-medium text-gray-700">${station.name} (Max: ${station.max_weight_kg} kg)</label>
+                <select data-station="${station.id}" class="armament-select w-full mt-1 p-2 border border-gray-300 rounded-lg">
+                    ${optionsHtml}
+                </select>
+            </div>
+            <div>
+                 <label class="block text-sm font-medium text-gray-700">Quantidade</label>
+                <input type="number" value="0" min="0" max="${station.max_units}" data-station-qty="${station.id}" class="armament-qty w-full mt-1 p-2 border border-gray-300 rounded-lg">
+            </div>
         `;
         container.appendChild(div);
     });
@@ -415,7 +443,7 @@ export async function updateProgress() {
     if (selectedEngineType) completedFields++;
     if (selectedSuperchargerType) completedFields++;
 
-    const totalFields = requiredFields.length + 2; // + engine and supercharger
+    const totalFields = requiredFields.length + 2;
     const progress = (completedFields / totalFields) * 100;
 
     const progressBar = document.getElementById('progress_bar');
