@@ -31,7 +31,7 @@
                         <div class="flex items-center justify-between">
                             <div class="flex items-center gap-3">
                                 <div class="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center font-bold">1</div>
-                                <h3 class="text-lg font-semibold">Informações Básicas</h3>
+                                <h3 class="text-lg font-semibold">Informações Básicas e Produção</h3>
                             </div>
                             <i class="fas fa-chevron-down transform transition-transform" id="step_1_icon"></i>
                         </div>
@@ -83,6 +83,14 @@
                                    class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
                             <p id="production_quality_note" class="text-sm text-center mt-2 text-gray-600"></p>
                         </div>
+
+                        <!-- Curva de Aprendizagem -->
+                        <div>
+                            <label for="production_turns" class="block text-sm font-medium text-gray-700 mb-1">Curva de Aprendizagem (Turnos em Produção)</label>
+                            <input type="number" id="production_turns" min="0" max="50" value="0"
+                                   class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <p id="learning_curve_note" class="text-sm text-green-700 mt-1">Cada turno em produção reduz o custo. Após o 1º turno, mudanças estruturais são bloqueadas.</p>
+                        </div>
                     </div>
                 </div>
 
@@ -128,19 +136,7 @@
                         </div>
                         
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <!-- Posição da Asa -->
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Posição da Asa</label>
-                                <select id="wing_position"
-                                        class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
-                                    <!-- Opções populadas via JS -->
-                                </select>
-                                <div id="wing_position_info" class="flex items-center mt-2 p-2 bg-gray-50 rounded-lg hidden">
-                                    <img id="wing_position_img" src="" alt="Ilustração da Posição da Asa" class="w-12 h-12 mr-3 object-contain">
-                                    <p id="wing_position_description" class="text-xs text-gray-700"></p>
-                                </div>
-                            </div>
-                            <!-- Formato da Asa -->
+                             <!-- Formato da Asa -->
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Formato da Asa</label>
                                 <select id="wing_shape"
@@ -181,10 +177,6 @@
                                     <input type="checkbox" id="folding_wings" class="w-4 h-4 text-green-600">
                                     <label for="folding_wings" class="text-sm">Asas Dobráveis (Naval)</label>
                                 </div>
-                                <div class="checkbox-row">
-                                    <input type="checkbox" id="swept_wings" class="w-4 h-4 text-green-600">
-                                    <label for="swept_wings" class="text-sm">Asas Enflechadas (Experimental)</label>
-                                </div>
                             </div>
                         </div>
 
@@ -197,7 +189,7 @@
                     </div>
                 </div>
 
-                <!-- Step 3: Motor e Propulsão (NOVO SISTEMA DE DESIGN) -->
+                <!-- Step 3: Motor e Propulsão -->
                 <div class="step-card bg-white rounded-2xl shadow-xl overflow-hidden" id="step_3">
                     <div class="bg-gradient-to-r from-orange-600 to-red-600 text-white p-4 cursor-pointer step-header" data-step="3">
                         <div class="flex items-center justify-between">
@@ -272,33 +264,23 @@
                                 <div id="range-consequences" class="text-xs mt-2 text-orange-600"></div>
                             </div>
 
-                            <!-- Teto Operacional (readonly) -->
-                            <div class="altitude-display p-3 bg-gray-100 rounded-lg">
-                                <div class="flex justify-between text-sm font-medium text-gray-700">
-                                    <span>🏔️ Teto Operacional:</span>
-                                    <span id="max-altitude" class="font-bold">--- metros</span>
+                            <!-- Displays Automáticos -->
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                <div class="p-3 bg-gray-100 rounded-lg text-sm">
+                                    <span>🏔️ Altitude Nominal:</span>
+                                    <span id="rated_altitude" class="font-bold float-right">--- m</span>
                                 </div>
-                            </div>
-
-                            <!-- Propeller Type (automatic based on speed) -->
-                            <div class="propeller-display p-3 bg-gray-100 rounded-lg mt-4">
-                                <div class="flex justify-between text-sm font-medium text-gray-700">
+                                <div class="p-3 bg-gray-100 rounded-lg text-sm">
+                                    <span> pressão M.A.P.:</span>
+                                    <span id="manifold_pressure" class="font-bold float-right">--- ATA</span>
+                                </div>
+                                <div class="p-3 bg-gray-100 rounded-lg text-sm">
                                     <span>⚙️ Hélice Sugerida:</span>
-                                    <span id="suggested_propeller" class="font-bold">---</span>
+                                    <span id="suggested_propeller" class="font-bold float-right">---</span>
                                 </div>
-                            </div>
-                            <!-- Cooling System (automatic based on engine type) -->
-                            <div class="cooling-display p-3 bg-gray-100 rounded-lg mt-2">
-                                <div class="flex justify-between text-sm font-medium text-gray-700">
-                                    <span>❄️ Refrigeração Sugerida:</span>
-                                    <span id="suggested_cooling" class="font-bold">---</span>
-                                </div>
-                            </div>
-                            <!-- Fuel Feed (automatic based on tech/engine) -->
-                            <div class="fuel-feed-display p-3 bg-gray-100 rounded-lg mt-2">
-                                <div class="flex justify-between text-sm font-medium text-gray-700">
-                                    <span>⛽ Alimentação Sugerida:</span>
-                                    <span id="suggested_fuel_feed" class="font-bold">---</span>
+                                <div class="p-3 bg-gray-100 rounded-lg text-sm">
+                                    <span>❄️ Refrigeração:</span>
+                                    <span id="suggested_cooling" class="font-bold float-right">---</span>
                                 </div>
                             </div>
 
@@ -313,96 +295,24 @@
                     </div>
                 </div>
 
-                <!-- Step 4: Armamentos -->
+                <!-- Step 4: Armamentos e Carga -->
                 <div class="step-card bg-white rounded-2xl shadow-xl overflow-hidden" id="step_4">
                     <div class="bg-gradient-to-r from-red-600 to-red-800 text-white p-4 cursor-pointer step-header" data-step="4">
                         <div class="flex items-center justify-between">
                             <div class="flex items-center gap-3">
                                 <div class="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center font-bold">4</div>
-                                <h3 class="text-lg font-semibold">Armamentos</h3>
+                                <h3 class="text-lg font-semibold">Armamentos e Carga</h3>
                             </div>
                             <i class="fas fa-chevron-down transform transition-transform" id="step_4_icon"></i>
                         </div>
                     </div>
                     <div class="p-6 space-y-6 hidden" id="step_4_content">
-                        <!-- Offensive Armaments -->
-                        <div id="offensive_armaments">
-                            <h4 class="text-lg font-semibold text-gray-800 mb-3">🎯 Armamentos Ofensivos</h4>
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div class="form-row">
-                                    <label class="text-sm font-medium">Metralhadora .30 (7.62mm)</label>
-                                    <input type="number" id="mg_30" min="0" max="8" value="0" 
-                                            class="w-20 p-2 border border-gray-300 rounded focus:ring-2 focus:ring-red-500">
-                                </div>
-                                <div class="form-row">
-                                    <label class="text-sm font-medium">Metralhadora .50 (12.7mm)</label>
-                                    <input type="number" id="mg_50" min="0" max="8" value="0"
-                                            class="w-20 p-2 border border-gray-300 rounded focus:ring-2 focus:ring-red-500">
-                                </div>
-                                <div class="form-row">
-                                    <label class="text-sm font-medium">Canhão 20mm</label>
-                                    <input type="number" id="cannon_20" min="0" max="6" value="0"
-                                            class="w-20 p-2 border border-gray-300 rounded focus:ring-2 focus:ring-red-500">
-                                </div>
-                                <div class="form-row">
-                                    <label class="text-sm font-medium">Canhão 30mm</label>
-                                    <input type="number" id="cannon_30" min="0" max="4" value="0"
-                                            class="w-20 p-2 border border-gray-300 rounded focus:ring-2 focus:ring-red-500">
-                                </div>
-                                <div class="form-row">
-                                    <label class="text-sm font-medium">Canhão 37mm</label>
-                                    <input type="number" id="cannon_37" min="0" max="2" value="0"
-                                            class="w-20 p-2 border border-gray-300 rounded focus:ring-2 focus:ring-red-500">
-                                </div>
-                                <div class="form-row">
-                                    <label class="text-sm font-medium">Canhão Anti-Tanque 40mm</label>
-                                    <input type="number" id="cannon_at_40" min="0" max="2" value="0"
-                                            class="w-20 p-2 border border-gray-300 rounded focus:ring-2 focus:ring-red-500">
-                                </div>
-                                <div class="form-row">
-                                    <label class="text-sm font-medium">Bombas 50kg</label>
-                                    <input type="number" id="bomb_50" min="0" max="20" value="0"
-                                            class="w-20 p-2 border border-gray-300 rounded focus:ring-2 focus:ring-red-500">
-                                </div>
-                                <div class="form-row">
-                                    <label class="text-sm font-medium">Bombas 100kg</label>
-                                    <input type="number" id="bomb_100" min="0" max="16" value="0"
-                                            class="w-20 p-2 border border-gray-300 rounded focus:ring-2 focus:ring-red-500">
-                                </div>
-                                <div class="form-row">
-                                    <label class="text-sm font-medium">Bombas 250kg</label>
-                                    <input type="number" id="bomb_250" min="0" max="8" value="0"
-                                            class="w-20 p-2 border border-gray-300 rounded focus:ring-2 focus:ring-red-500">
-                                </div>
-                                <div class="form-row">
-                                    <label class="text-sm font-medium">Bombas 500kg</label>
-                                    <input type="number" id="bomb_500" min="0" max="4" value="0"
-                                            class="w-20 p-2 border border-gray-300 rounded focus:ring-2 focus:ring-red-500">
-                                </div>
-                                <div class="form-row">
-                                    <label class="text-sm font-medium">Bombas 1000kg</label>
-                                    <input type="number" id="bomb_1000" min="0" max="2" value="0"
-                                            class="w-20 p-2 border border-gray-300 rounded focus:ring-2 focus:ring-red-500">
-                                </div>
-                                <div class="form-row">
-                                    <label class="text-sm font-medium">Torpedo Naval</label>
-                                    <input type="number" id="torpedo" min="0" max="1" value="0"
-                                            class="w-20 p-2 border border-gray-300 rounded focus:ring-2 focus:ring-red-500">
-                                </div>
-                                <div class="form-row">
-                                    <label class="text-sm font-medium">Bombas Incendiárias</label>
-                                    <input type="number" id="incendiary" min="0" max="10" value="0"
-                                            class="w-20 p-2 border border-gray-300 rounded focus:ring-2 focus:ring-red-500">
-                                </div>
-                                <div class="form-row">
-                                    <label class="text-sm font-medium">Foguetes Ar-Terra</label>
-                                    <input type="number" id="rockets" min="0" max="16" value="0"
-                                            class="w-20 p-2 border border-gray-300 rounded focus:ring-2 focus:ring-red-500">
-                                </div>
-                            </div>
-                            <p id="armament_limits_note" class="text-sm text-red-600 mt-2 hidden">
-                                ⚠️ Armamento limitado pela Posição/Formato da Asa.
-                            </p>
+                        
+                        <!-- Payload Stations -->
+                        <div id="payload_stations_container" class="space-y-4">
+                            <h4 class="text-lg font-semibold text-gray-800 mb-3">📦 Estações de Carga (Payload)</h4>
+                            <!-- Estações serão populadas dinamicamente aqui -->
+                            <p class="text-gray-600">Selecione um tipo de aeronave para ver as estações de carga.</p>
                         </div>
 
                         <!-- Defensive Armaments -->
@@ -670,7 +580,31 @@
                             </div>
                         </div>
 
-                        <!-- Technical - REMOVED DUPLICATE ARMAMENT AND RELIABILITY HERE -->
+                        <!-- CG and Stress Meters -->
+                        <div class="bg-blue-50 p-3 rounded-lg space-y-3">
+                            <!-- CG Meter -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Centro de Gravidade (CG)</label>
+                                <div class="relative w-full bg-gray-200 rounded-full h-2.5">
+                                    <div id="cg_indicator" class="bg-blue-600 h-2.5 rounded-full absolute" style="width: 4px; left: 50%;"></div>
+                                </div>
+                                <div class="flex justify-between text-xs text-gray-500 mt-1">
+                                    <span>Frente</span>
+                                    <span>Centro</span>
+                                    <span>Atrás</span>
+                                </div>
+                            </div>
+                            <!-- Structural Stress Meter -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Fadiga Estrutural</label>
+                                <div class="w-full bg-gray-200 rounded-full h-2.5">
+                                    <div id="stress_bar" class="bg-red-600 h-2.5 rounded-full" style="width: 0%"></div>
+                                </div>
+                                <p id="stress_bar_label" class="text-xs text-center mt-1">0%</p>
+                            </div>
+                        </div>
+
+                        <!-- Technical -->
                         <div class="bg-blue-50 p-3 rounded-lg space-y-2">
                             <div class="flex justify-between">
                                 <span class="text-sm font-medium text-gray-600">Peso:</span>
@@ -685,8 +619,16 @@
                         <!-- Costs -->
                         <div class="bg-yellow-50 p-3 rounded-lg space-y-2">
                             <div class="flex justify-between">
-                                <span class="text-sm font-medium text-gray-600">Custo/Unid:</span>
-                                <span id="unit_cost" class="text-sm font-semibold text-yellow-600">0</span>
+                                <span class="text-sm font-medium text-gray-600">Custo Base/Unid:</span>
+                                <span id="base_unit_cost" class="text-sm font-semibold text-yellow-600">0</span>
+                            </div>
+                             <div class="flex justify-between">
+                                <span class="text-sm font-medium text-gray-600">Desc. Curva Aprend.:</span>
+                                <span id="learning_curve_discount_display" class="text-sm font-semibold text-green-600">0%</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-sm font-medium text-gray-600">Custo Final/Unid:</span>
+                                <span id="unit_cost" class="text-sm font-bold text-yellow-700">0</span>
                             </div>
                             <div class="flex justify-between">
                                 <span class="text-sm font-medium text-gray-600" id="total_cost_label">Custo Total:</span>
@@ -704,37 +646,13 @@
                                 <div class="flex items-center justify-between">
                                     <div class="flex items-center">
                                         <i class="fas fa-cog text-purple-600 mr-2 text-sm"></i>
-                                        <span class="font-medium text-sm">Detalhes do Projeto</span>
+                                        <span class="font-medium text-sm">Equipamentos Requeridos</span>
                                     </div>
                                 </div>
                             </div>
-                            <div class="p-3 text-xs space-y-2">
-                                <div class="grid grid-cols-2 gap-3">
-                                    <div>
-                                        <span class="font-medium text-gray-600">Asas:</span>
-                                        <div id="summary_wing_features" class="mt-1 text-gray-700"></div>
-                                    </div>
-                                    <div>
-                                        <span class="font-medium text-gray-600">Motor:</span>
-                                        <div id="summary_engine_enhancements" class="mt-1 text-gray-700"></div>
-                                    </div>
-                                    <div>
-                                        <span class="font-medium text-gray-600">Proteção:</span>
-                                        <div id="summary_protection" class="mt-1 text-gray-700"></div>
-                                    </div>
-                                    <div>
-                                        <span class="font-medium text-gray-600">Cockpit:</span>
-                                        <div id="summary_cockpit_comfort" class="mt-1 text-gray-700"></div>
-                                    </div>
-                                    <div>
-                                        <span class="font-medium text-gray-600">Aviônicos:</span>
-                                        <div id="summary_advanced_avionics" class="mt-1 text-gray-700"></div>
-                                    </div>
-                                    <div>
-                                        <span class="font-medium text-gray-600">Equipamentos:</span>
-                                        <div id="summary_equipment" class="mt-1 text-gray-700"></div>
-                                    </div>
-                                </div>
+                            <div id="required_features_summary" class="p-3 text-xs space-y-2 text-red-600">
+                                <!-- Equipamentos obrigatórios por performance serão listados aqui -->
+                                Nenhum
                             </div>
                         </div>
                         
@@ -751,22 +669,6 @@
                             <div class="flex justify-between">
                                 <span class="text-sm font-medium text-gray-600">Saldo Metal:</span>
                                 <span id="country_metal_balance" class="text-sm font-semibold text-purple-600">N/A</span>
-                            </div>
-                            <div class="flex justify-between">
-                                <span class="text-sm font-medium text-gray-600">Tecnologia Civil:</span>
-                                <span id="display_country_tech_civil" class="text-sm font-semibold text-purple-600">N/A</span>
-                            </div>
-                            <div class="flex justify-between">
-                                <span class="text-sm font-medium text-gray-600">Tecnologia Aeronáutica:</span>
-                                <span id="display_country_air_tech" class="text-sm font-semibold text-purple-600">N/A</span>
-                            </div>
-                            <div class="flex justify-between">
-                                <span class="text-sm font-medium text-gray-600">Urbanização:</span>
-                                <span id="display_country_urbanization" class="text-sm font-semibold text-purple-600">N/A</span>
-                            </div>
-                            <div class="flex justify-between">
-                                <span class="text-sm font-medium text-gray-600">Redução de Custo do País:</span>
-                                <span id="display_country_cost_reduction" class="text-sm font-semibold text-purple-600">N/A</span>
                             </div>
                             <div id="metal_balance_status" class="text-xs font-medium mt-1 text-center"></div>
                         </div>
