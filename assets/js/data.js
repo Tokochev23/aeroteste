@@ -265,6 +265,8 @@ export const gameData = {
     }
 };
 
+// --- DADOS ADICIONAIS EXPORTADOS ---
+
 export const learningCurve = [
     { turns: 0, discount: 0.0, locked: false },
     { turns: 1, discount: 0.05, locked: true },
@@ -276,13 +278,17 @@ export const learningCurve = [
     { turns: 20, discount: 0.50, locked: true },
 ];
 
+export const techLevelRestrictions = {
+    // ... (Esta estrutura pode ser usada para bloquear componentes inteiros por tecnologia)
+};
+
 export const engineSuperchargerCombos = {
     calculateLimits: (engineTypeKey, superchargerTypeKey) => {
         const engine = gameData.components.engineTypes[engineTypeKey];
         const supercharger = gameData.components.superchargerTypes[superchargerTypeKey];
 
         if (!engine || !supercharger) {
-            return { speed: { min: 0, max: 0 }, range: { min: 0, max: 0 }, altitude: 0, special: { blocked: true, reason: "Selecione um tipo de motor e sobrealimentador válidos." } };
+            return { speed: { min: 0, max: 0 }, range: { min: 0, max: 0 }, rated_altitude: 0, manifold_pressure: 0, special: { blocked: true, reason: "Selecione um tipo de motor e sobrealimentador válidos." } };
         }
 
         let minSpeed = supercharger.characteristics.speed_range.min;
@@ -292,9 +298,9 @@ export const engineSuperchargerCombos = {
 
         maxSpeed *= (engine.characteristics.max_speed_bonus || 1.0);
         
-        minRange *= (engine.characteristics.fuel_efficiency || 1.0);
-        maxRange *= (engine.characteristics.fuel_efficiency || 1.0);
-
+        // Simulação de eficiência de combustível
+        minRange *= (engine.characteristics.bsfc_g_per_kwh / 300);
+        maxRange *= (engine.characteristics.bsfc_g_per_kwh / 300);
         minRange *= (supercharger.characteristics.fuel_efficiency || 1.0);
         maxRange *= (supercharger.characteristics.fuel_efficiency || 1.0);
 
@@ -329,20 +335,14 @@ export const engineSuperchargerCombos = {
 };
 
 export const designPenalties = {
-    speedPenalties: {
-        600: { required_features: ["advanced_control_surfaces"] },
-        700: { required_features: ["advanced_control_surfaces", "duralumin"] },
-        800: { required_features: ["advanced_control_surfaces", "duralumin", "pressurized_cabin"] }
-    },
     rangePenalties: {
-        2000: { required_features: ["extra_fuel_tanks"] },
-        3000: { required_features: ["extra_fuel_tanks", "drop_tanks"] },
-        4000: { required_features: ["extra_fuel_tanks", "drop_tanks", "basic_autopilot"] },
-        5000: { required_features: ["extra_fuel_tanks", "drop_tanks", "basic_autopilot", "nav_instruments"] }
+        2000: { threshold: 2000, required_features: ["extra_fuel_tanks"] },
+        3000: { threshold: 3000, required_features: ["extra_fuel_tanks", "drop_tanks"] },
+        4000: { threshold: 4000, required_features: ["extra_fuel_tanks", "drop_tanks", "basic_autopilot"] },
+        5000: { threshold: 5000, required_features: ["extra_fuel_tanks", "drop_tanks", "basic_autopilot", "nav_instruments"] }
     }
 };
 
-// --- DADOS DE AERONAVES REAIS ---
 export const realWorldAircraft = [
     { id: 'bf109e3', name: 'Messerschmitt Bf 109 E-3', image_url: 'https://lh3.googleusercontent.com/d/1nvIkjIeZtmgpJXAZajyeqDBicQlAWNFj' },
     { id: 'bf109g6', name: 'Messerschmitt Bf 109 G-6', image_url: 'https://lh3.googleusercontent.com/d/1cbSlGQcEtXrD1hIK_FBX7kUB9N6cVTef' },
