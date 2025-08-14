@@ -186,7 +186,11 @@ export function updateCalculations() {
                 advanced_avionics: Array.from(document.querySelectorAll('#advanced_avionics_checkboxes input[type="checkbox"]:checked')).map(cb => cb.id),
                 equipment: Array.from(document.querySelectorAll('#equipment_checkboxes input[type="checkbox"]:checked')).map(cb => cb.id),
             },
-            payload: Array.from(document.querySelectorAll('#payload_stations_container .armament-select')).map(s => ({ stationId: s.dataset.station, armamentId: s.value }))
+            payload: Array.from(document.querySelectorAll('#payload_stations_container .armament-select')).map(s => ({ 
+                stationId: s.dataset.station, 
+                armamentId: s.value,
+                quantity: parseInt(document.querySelector(`.armament-qty[data-station-qty="${s.dataset.station}"]`)?.value) || 0
+            }))
         };
 
         const typeData = gameData.components.aircraft_types?.[inputs.aircraftType];
@@ -238,20 +242,23 @@ export function updateCalculations() {
         let payloadWeight = 0, payloadCost = 0, payloadMetalCost = 0;
         let totalCgMoment = typeData.base_cg * totalEmptyWeight;
         let payloadStationStatus = [];
+        let offensiveArmamentTexts = [];
 
-        typeData.payload_stations.forEach(station => {
-            const selectedArmamentId = inputs.payload.find(p => p.stationId === station.id)?.armamentId;
-            if (selectedArmamentId && selectedArmamentId !== 'empty') {
-                const armData = gameData.components.armaments[selectedArmamentId];
-                payloadWeight += armData.weight;
-                payloadCost += armData.cost;
-                payloadMetalCost += armData.metal_cost;
-                totalCgMoment += armData.weight * station.cg_position;
-                
-                if (armData.weight > station.max_weight_kg) {
-                    payloadStationStatus.push({ station: station.name, status: 'exceeded', message: `Estação ${station.name} excede o limite de peso!` });
-                } else {
-                    payloadStationStatus.push({ station: station.name, status: 'ok' });
+        inputs.payload.forEach(p => {
+            if (p.armamentId !== 'empty' && p.quantity > 0) {
+                const station = typeData.payload_stations.find(s => s.id === p.stationId);
+                const armData = gameData.components.armaments[p.armamentId];
+                if (station && armData) {
+                    const totalWeightInStation = armData.weight * p.quantity;
+                    payloadWeight += totalWeightInStation;
+                    payloadCost += armData.cost * p.quantity;
+                    payloadMetalCost += armData.metal_cost * p.quantity;
+                    totalCgMoment += totalWeightInStation * station.cg_position;
+                    offensiveArmamentTexts.push(`${p.quantity}x ${armData.name}`);
+
+                    if (totalWeightInStation > station.max_weight_kg) {
+                        payloadStationStatus.push({ station: station.name, status: 'exceeded', message: `Estação ${station.name} excede o limite de peso!` });
+                    }
                 }
             }
         });
@@ -286,7 +293,7 @@ export function updateCalculations() {
         const fuelCapacity = gameData.constants.base_fuel_capacity_liters * (totalEmptyWeight / 2000);
         const fuelWeight = fuelCapacity * gameData.constants.fuel_weight_per_liter;
         const combatWeight = totalEmptyWeight + payloadWeight + (inputs.numCrewmen * gameData.constants.crew_weight_kg) + fuelWeight;
-        const finalCg = totalCgMoment / combatWeight;
+        const finalCg = combatWeight > 0 ? totalCgMoment / combatWeight : 0;
 
         baseUnitCost += payloadCost;
         baseMetalCost += payloadMetalCost;
@@ -294,8 +301,7 @@ export function updateCalculations() {
         const turn_g_force = Math.min(gameData.constants.turn_g_force, (0.5 * getAirPropertiesAtAltitude(2000).density * Math.pow(80, 2) * aero.cl_max) / (combatWeight / aero.wing_area_m2));
         let currentStress = (turn_g_force * typeData.stress_per_g) + (inputs.targetSpeed * typeData.stress_per_speed_kmh);
         const stressLimit = structureData.structural_stress_limit;
-        let needsReinforcement = currentStress > stressLimit;
-        if (needsReinforcement) {
+        if (currentStress > stressLimit) {
             const reinforcement = gameData.components.equipment.structural_reinforcement;
             baseUnitCost += reinforcement.cost;
             totalEmptyWeight += reinforcement.weight;
@@ -303,8 +309,8 @@ export function updateCalculations() {
             aero.maneuverability_mod *= reinforcement.maneuverability_mod;
         }
 
-        const learningCurveData = learningCurve.find(l => inputs.production_turns >= l.turns) || learningCurve[0];
-        const learningDiscount = learningCurveData.discount;
+        const learningCurveEntry = learningCurve.slice().reverse().find(l => inputs.production_turns >= l.turns) || learningCurve[0];
+        const learningDiscount = learningCurveEntry.discount;
         let finalUnitCost = baseUnitCost * (1 - learningDiscount);
 
         const perfSL = calculatePerformanceAtAltitude(0, combatWeight, totalEnginePower, propData, aero, superchargerData);
@@ -333,7 +339,7 @@ export function updateCalculations() {
             finalSpeedKmhAlt, rate_of_climb_ms, finalServiceCeiling: serviceCeiling * aero.ceiling_mod,
             finalRangeKm: Math.min(inputs.targetRange, typeData.limits.max_range), turn_time_s, finalReliability,
             countryData: gameData.countries?.[inputs.selectedCountryName], typeData, superchargerData,
-            finalCg, currentStress, stressLimit, payloadStationStatus,
+            finalCg, currentStress, stressLimit, payloadStationStatus, offensiveArmamentTexts,
             requiredFeatures: Array.from(requiredFeatures).map(id => findItemAcrossCategories(id)?.name).filter(Boolean)
         };
 
