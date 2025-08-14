@@ -48,28 +48,30 @@ body {
     background-color: #eff6ff; /* Fundo azul claro */
     box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.4);
 }
+.choice-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    background-color: #f3f4f6;
+}
 
 
-/* Alterado: Definindo a coluna de resumo para ser um contêiner flexível que rola */
+/* Coluna de resumo rolável */
 @media (min-width: 1024px) {
     .lg\:grid-cols-3 {
         display: grid;
-        grid-template-columns: 2fr 1fr; /* Removido o espaço do meio para dar mais espaço ao resumo */
+        grid-template-columns: 2fr 1fr;
         gap: 2rem;
     }
     
     .lg\:col-span-1 {
-        display: flex;
-        flex-direction: column;
-        height: calc(100vh - 4rem); /* Ajusta a altura da coluna para a altura da viewport menos o header/footer */
-        overflow-y: auto; /* Adiciona a barra de rolagem à coluna inteira */
+        position: sticky;
+        top: 1rem;
+        height: calc(100vh - 2rem);
     }
 
     .summary-panel {
-        position: static; /* Garantir que o painel flua normalmente dentro da coluna */
-        top: 0;
-        max-height: none;
-        overflow-y: visible; /* A rolagem é gerenciada pelo contêiner pai */
+        max-height: 100%;
+        overflow-y: auto;
     }
 }
 
